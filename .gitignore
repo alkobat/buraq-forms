@@ -1,0 +1,118 @@
+# =================================================================
+# Employee Evaluation System - .gitignore
+# =================================================================
+
+# Dependencies
+/vendor/
+/node_modules/
+/bower_components/
+composer.phar
+
+# Environment files
+.env
+.env.local
+.env.production
+/config/.env
+
+# Logs
+*.log
+/logs/
+/var/logs/
+
+# Cache and temporary files
+/cache/
+/tmp/
+/temp/
+/var/cache/
+/var/tmp/
+
+# Database
+*.sqlite
+*.db
+/database/*.sqlite
+/database/*.db
+
+# IDE and Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Storage and uploads
+/storage/forms/uploads/*
+!/storage/forms/uploads/.gitkeep
+/storage/forms/temp/*
+!/storage/forms/temp/.gitkeep
+/storage/forms/backup/*
+!/storage/forms/backup/.gitkeep
+
+# Configuration files that shouldn't be committed
+/config/database.php.example
+/config/app.php.example
+/config/security.php.example
+
+# Test files that might contain sensitive data
+/tests/_output/
+/tests/_logs/
+/tests/coverage/
+
+# Documentation build files
+/docs/_build/
+/docs/.doctrees/
+
+# Deployment files
+/deploy/
+/deployment/
+
+# Sensitive PHP files
+/config/
+/private/
+/secret/
+
+# Composer files that might contain sensitive info
+composer.json.bak
+composer.lock.bak
+
+# Package files
+*.tar.gz
+*.zip
+*.rar
+
+# SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.csr
+
+# Runtime files
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage reports
+/coverage/
+.nyc_output/
+
+# Temporary image files
+*.tmp
+*.temp
+
+# Generated documentation
+/docs/api/
+/docs/html/
