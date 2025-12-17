@@ -30,37 +30,58 @@ try {
     $totalForms = count($formService->list());
     $activeForms = count($formService->list('active'));
     
-    // جلب آخر العمليات (activity log)
-    $activityLog = [
-        [
-            'action' => 'تم إنشاء إدارة جديدة',
-            'details' => 'إدارة الموارد البشرية',
-            'timestamp' => date('Y-m-d H:i:s', strtotime('-2 hours')),
-            'icon' => 'fas fa-building',
-            'color' => 'primary'
-        ],
-        [
-            'action' => 'تم إنشاء استمارة جديدة',
-            'details' => 'استمارة تقييم الأداء السنوي',
-            'timestamp' => date('Y-m-d H:i:s', strtotime('-4 hours')),
-            'icon' => 'fas fa-file-alt',
-            'color' => 'success'
-        ],
-        [
-            'action' => 'تم تحديث إعدادات النظام',
-            'details' => 'تفعيل الإشعارات البريدية',
-            'timestamp' => date('Y-m-d H:i:s', strtotime('-1 day')),
-            'icon' => 'fas fa-cog',
-            'color' => 'warning'
-        ],
-        [
-            'action' => 'تم حذف استمارة قديمة',
-            'details' => 'استمارة تقييم الربع الأول 2023',
-            'timestamp' => date('Y-m-d H:i:s', strtotime('-2 days')),
-            'icon' => 'fas fa-trash',
-            'color' => 'danger'
-        ]
-    ];
+    // إحصائيات الإجابات
+    $submissionsStatsStmt = $pdo->query('
+        SELECT 
+            COUNT(*) as total,
+            SUM(CASE WHEN status = "pending" THEN 1 ELSE 0 END) as pending,
+            SUM(CASE WHEN status = "completed" THEN 1 ELSE 0 END) as completed,
+            SUM(CASE WHEN DATE(submitted_at) = CURDATE() THEN 1 ELSE 0 END) as today
+        FROM form_submissions
+    ');
+    $submissionsStats = $submissionsStatsStmt->fetch(PDO::FETCH_ASSOC);
+    
+    // إحصائيات الإجابات لكل استمارة
+    $submissionsByFormStmt = $pdo->query('
+        SELECT 
+            f.title,
+            COUNT(fs.id) as count
+        FROM forms f
+        LEFT JOIN form_submissions fs ON f.id = fs.form_id
+        WHERE f.status = "active"
+        GROUP BY f.id, f.title
+        ORDER BY count DESC
+        LIMIT 5
+    ');
+    $submissionsByForm = $submissionsByFormStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // إحصائيات الإجابات لكل إدارة
+    $submissionsByDeptStmt = $pdo->query('
+        SELECT 
+            d.name,
+            COUNT(fs.id) as count
+        FROM departments d
+        LEFT JOIN form_submissions fs ON d.id = fs.department_id
+        WHERE d.is_active = 1
+        GROUP BY d.id, d.name
+        ORDER BY count DESC
+        LIMIT 5
+    ');
+    $submissionsByDept = $submissionsByDeptStmt->fetchAll(PDO::FETCH_ASSOC);
+    
+    // آخر الإجابات
+    $recentSubmissionsStmt = $pdo->query('
+        SELECT 
+            fs.reference_code,
+            fs.submitted_by,
+            fs.submitted_at,
+            f.title as form_title
+        FROM form_submissions fs
+        LEFT JOIN forms f ON fs.form_id = f.id
+        ORDER BY fs.submitted_at DESC
+        LIMIT 10
+    ');
+    $recentSubmissions = $recentSubmissionsStmt->fetchAll(PDO::FETCH_ASSOC);
     
 } catch (Exception $e) {
     $error = $e->getMessage();
@@ -113,15 +134,9 @@ try {
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="submissions.php">
+                            <a class="nav-link" href="form-submissions.php">
                                 <i class="fas fa-inbox"></i>
                                 الإجابات
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="users.php">
-                                <i class="fas fa-users"></i>
-                                المستخدمين
                             </a>
                         </li>
                     </ul>
@@ -206,7 +221,7 @@ try {
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <div class="h2 mb-0">0</div>
+                                        <div class="h2 mb-0"><?= $submissionsStats['total'] ?? 0 ?></div>
                                         <div class="small opacity-75">إجمالي الإجابات</div>
                                     </div>
                                     <div>
@@ -215,7 +230,7 @@ try {
                                 </div>
                                 <div class="mt-2 small">
                                     <i class="fas fa-plus-circle"></i>
-                                    اليوم: 0
+                                    اليوم: <?= $submissionsStats['today'] ?? 0 ?>
                                 </div>
                             </div>
                         </div>
@@ -226,16 +241,16 @@ try {
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <div class="h2 mb-0">1</div>
-                                        <div class="small opacity-75">المستخدمين</div>
+                                        <div class="h2 mb-0"><?= $submissionsStats['pending'] ?? 0 ?></div>
+                                        <div class="small opacity-75">قيد الانتظار</div>
                                     </div>
                                     <div>
-                                        <i class="fas fa-users fa-2x opacity-75"></i>
+                                        <i class="fas fa-hourglass-half fa-2x opacity-75"></i>
                                     </div>
                                 </div>
                                 <div class="mt-2 small">
-                                    <i class="fas fa-user-shield"></i>
-                                    مشرف واحد
+                                    <i class="fas fa-check-circle"></i>
+                                    مكتملة: <?= $submissionsStats['completed'] ?? 0 ?>
                                 </div>
                             </div>
                         </div>
@@ -273,7 +288,7 @@ try {
                                         </a>
                                     </div>
                                     <div class="col-md-3 mb-2">
-                                        <a href="submissions.php" class="btn btn-outline-warning w-100 text-decoration-none">
+                                        <a href="form-submissions.php" class="btn btn-outline-warning w-100 text-decoration-none">
                                             <i class="fas fa-inbox d-block mb-2"></i>
                                             عرض الإجابات
                                         </a>
@@ -286,41 +301,51 @@ try {
 
                 <!-- Recent Activity & System Status -->
                 <div class="row">
-                    <!-- Recent Activity -->
+                    <!-- Recent Submissions -->
                     <div class="col-md-8">
                         <div class="card fade-in">
                             <div class="card-header">
                                 <h5 class="mb-0">
                                     <i class="fas fa-history"></i>
-                                    آخر النشاطات
+                                    آخر الإجابات المرسلة
                                 </h5>
                             </div>
                             <div class="card-body">
-                                <?php foreach ($activityLog as $activity): ?>
-                                <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
-                                    <div class="me-3">
-                                        <div class="rounded-circle bg-<?= $activity['color'] ?> d-flex align-items-center justify-content-center" 
-                                             style="width: 40px; height: 40px;">
-                                            <i class="<?= $activity['icon'] ?> text-white"></i>
+                                <?php if (empty($recentSubmissions)): ?>
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                                        <p>لا توجد إجابات بعد</p>
+                                    </div>
+                                <?php else: ?>
+                                    <?php foreach ($recentSubmissions as $submission): ?>
+                                    <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
+                                        <div class="me-3">
+                                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" 
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="fas fa-file-alt text-white"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold"><?= htmlspecialchars($submission['submitted_by']) ?></div>
+                                            <div class="text-muted small">
+                                                <?= htmlspecialchars($submission['form_title'] ?? 'استمارة غير معروفة') ?>
+                                                <span class="badge bg-secondary"><?= htmlspecialchars($submission['reference_code']) ?></span>
+                                            </div>
+                                        </div>
+                                        <div class="text-muted small">
+                                            <i class="fas fa-clock"></i>
+                                            <?= date('H:i', strtotime($submission['submitted_at'])) ?>
                                         </div>
                                     </div>
-                                    <div class="flex-grow-1">
-                                        <div class="fw-bold"><?= $activity['action'] ?></div>
-                                        <div class="text-muted small"><?= $activity['details'] ?></div>
+                                    <?php endforeach; ?>
+                                    
+                                    <div class="text-center">
+                                        <a href="form-submissions.php" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-list"></i>
+                                            عرض جميع الإجابات
+                                        </a>
                                     </div>
-                                    <div class="text-muted small">
-                                        <i class="fas fa-clock"></i>
-                                        <?= date('H:i', strtotime($activity['timestamp'])) ?>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-                                
-                                <div class="text-center">
-                                    <a href="#" class="btn btn-outline-primary btn-sm">
-                                        <i class="fas fa-list"></i>
-                                        عرض جميع النشاطات
-                                    </a>
-                                </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -392,6 +417,81 @@ try {
                                         وقت التشغيل: 99.9%
                                     </small>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submissions Statistics -->
+                <div class="row mt-4">
+                    <!-- Submissions by Form -->
+                    <div class="col-md-6">
+                        <div class="card fade-in">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-chart-bar"></i>
+                                    الإجابات حسب الاستمارة
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <?php if (empty($submissionsByForm)): ?>
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                                        <p>لا توجد بيانات</p>
+                                    </div>
+                                <?php else: ?>
+                                    <?php foreach ($submissionsByForm as $item): ?>
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="small"><?= htmlspecialchars($item['title']) ?></span>
+                                                <span class="badge bg-primary"><?= $item['count'] ?></span>
+                                            </div>
+                                            <div class="progress" style="height: 8px;">
+                                                <?php
+                                                $maxCount = $submissionsByForm[0]['count'] ?? 1;
+                                                $percentage = $maxCount > 0 ? ($item['count'] / $maxCount) * 100 : 0;
+                                                ?>
+                                                <div class="progress-bar" style="width: <?= $percentage ?>%"></div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submissions by Department -->
+                    <div class="col-md-6">
+                        <div class="card fade-in">
+                            <div class="card-header">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-building"></i>
+                                    الإجابات حسب الإدارة
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <?php if (empty($submissionsByDept)): ?>
+                                    <div class="text-center text-muted py-4">
+                                        <i class="fas fa-building fa-3x mb-3"></i>
+                                        <p>لا توجد بيانات</p>
+                                    </div>
+                                <?php else: ?>
+                                    <?php foreach ($submissionsByDept as $item): ?>
+                                        <div class="mb-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="small"><?= htmlspecialchars($item['name']) ?></span>
+                                                <span class="badge bg-success"><?= $item['count'] ?></span>
+                                            </div>
+                                            <div class="progress" style="height: 8px;">
+                                                <?php
+                                                $maxCount = $submissionsByDept[0]['count'] ?? 1;
+                                                $percentage = $maxCount > 0 ? ($item['count'] / $maxCount) * 100 : 0;
+                                                ?>
+                                                <div class="progress-bar bg-success" style="width: <?= $percentage ?>%"></div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
