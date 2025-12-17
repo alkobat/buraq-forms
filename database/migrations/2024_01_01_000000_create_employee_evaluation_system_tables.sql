@@ -74,6 +74,25 @@ CREATE TABLE IF NOT EXISTS `forms` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Dynamic forms definitions table';
 
 -- ===================================================================
+-- TABLE: form_departments
+-- Description: Link forms to allowed departments (optional restriction)
+-- ===================================================================
+CREATE TABLE IF NOT EXISTS `form_departments` (
+    `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `form_id` bigint(20) UNSIGNED NOT NULL COMMENT 'Form ID',
+    `department_id` bigint(20) UNSIGNED NOT NULL COMMENT 'Department ID',
+    `created_at` timestamp NULL DEFAULT NULL,
+
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `form_departments_form_department_unique` (`form_id`, `department_id`),
+    KEY `form_departments_form_id_index` (`form_id`),
+    KEY `form_departments_department_id_index` (`department_id`),
+
+    CONSTRAINT `form_departments_form_id_foreign` FOREIGN KEY (`form_id`) REFERENCES `forms` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT `form_departments_department_id_foreign` FOREIGN KEY (`department_id`) REFERENCES `departments` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Forms to departments pivot table';
+
+-- ===================================================================
 -- TABLE: form_fields
 -- Description: Form fields configuration
 -- ===================================================================
@@ -215,4 +234,4 @@ SELECT 'Migration completed successfully!' AS status,
        COUNT(*) AS tables_created 
 FROM information_schema.tables 
 WHERE table_schema = DATABASE() 
-AND table_name IN ('admins','departments','forms','form_fields','form_submissions','submission_answers','system_settings');
+AND table_name IN ('admins','departments','forms','form_departments','form_fields','form_submissions','submission_answers','system_settings');
