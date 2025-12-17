@@ -129,15 +129,9 @@ $managers = $departmentService->getManagersList();
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="submissions.php">
+                            <a class="nav-link" href="form-submissions.php">
                                 <i class="fas fa-inbox"></i>
                                 الإجابات
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="users.php">
-                                <i class="fas fa-users"></i>
-                                المستخدمين
                             </a>
                         </li>
                     </ul>
