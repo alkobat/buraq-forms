@@ -400,3 +400,519 @@ function ees_prepare_data_for_export(array $submission, array $fieldDefinitions)
 
     return $export;
 }
+
+/**
+ * Generate a secure random token for CSRF protection.
+ */
+function ees_generate_csrf_token(): string
+{
+    return bin2hex(random_bytes(32));
+}
+
+/**
+ * Validate CSRF token.
+ */
+function ees_validate_csrf_token(string $token, ?string $sessionToken = null): bool
+{
+    if ($sessionToken === null) {
+        $sessionToken = $_SESSION['csrf_token'] ?? '';
+    }
+    
+    return hash_equals($sessionToken, $token);
+}
+
+/**
+ * Sanitize HTML content while preserving basic formatting.
+ */
+function ees_sanitize_html(string $html): string
+{
+    $allowedTags = '<p><br><strong><em><u><h1><h2><h3><h4><h5><h6><ul><ol><li><a>';
+    return strip_tags($html, $allowedTags);
+}
+
+/**
+ * Format file size in human readable format.
+ */
+function ees_format_file_size(int $bytes): string
+{
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    
+    for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
+        $bytes /= 1024;
+    }
+    
+    return round($bytes, 2) . ' ' . $units[$i];
+}
+
+/**
+ * Generate reference code for submissions.
+ */
+function ees_generate_reference_code(int $submissionId): string
+{
+    return 'REF-' . str_pad((string) $submissionId, 6, '0', STR_PAD_LEFT);
+}
+
+/**
+ * Convert Arabic numerals to English numerals.
+ */
+function ees_arabic_to_english_numerals(string $text): string
+    {
+    $arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    $englishNumerals = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    
+    return str_replace($arabicNumerals, $englishNumerals, $text);
+}
+
+/**
+ * Convert English numerals to Arabic numerals.
+ */
+function ees_english_to_arabic_numerals(string $text): string
+{
+    $englishNumerals = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+    $arabicNumerals = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+    
+    return str_replace($englishNumerals, $arabicNumerals, $text);
+}
+
+/**
+ * Validate Saudi phone number.
+ */
+function ees_validate_saudi_phone(string $phone): bool
+{
+    $phone = preg_replace('/[^0-9+]/', '', $phone);
+    
+    // Saudi phone patterns
+    $patterns = [
+        '/^(\+966|966)?5[0-9]{8}$/',      // Mobile
+        '/^(\+966|966)?1[1-9][0-9]{7}$/', // Landline
+        '/^(\+966|966)?11[1-9][0-9]{6}$/' // Landline (Riyadh)
+    ];
+    
+    foreach ($patterns as $pattern) {
+        if (preg_match($pattern, $phone)) {
+            return true;
+        }
+    }
+    
+    return false;
+}
+
+/**
+ * Format Saudi phone number for display.
+ */
+function ees_format_saudi_phone(string $phone): string
+{
+    $phone = preg_replace('/[^0-9+]/', '', $phone);
+    
+    if (preg_match('/^(\+966|966)?5([0-9]{8})$/', $phone, $matches)) {
+        return '+966 5' . substr($matches[2], 0, 3) . ' ' . substr($matches[2], 3);
+    }
+    
+    if (preg_match('/^(\+966|966)?1([1-9][0-9]{7})$/', $phone, $matches)) {
+        return '+966 1' . substr($matches[2], 0, 3) . ' ' . substr($matches[2], 3);
+    }
+    
+    return $phone;
+}
+
+/**
+ * Generate a unique temporary file path.
+ */
+function ees_generate_temp_file_path(string $prefix = 'temp_'): string
+{
+    return sys_get_temp_dir() . '/' . $prefix . uniqid() . '.tmp';
+}
+
+/**
+ * Check if current user has permission for specific action.
+ */
+function ees_has_permission(string $permission, ?int $adminId = null, ?int $departmentId = null): bool
+{
+    if ($adminId === null) {
+        $adminId = $_SESSION['admin_id'] ?? 0;
+    }
+    
+    if ($adminId === 0) {
+        return false;
+    }
+    
+    try {
+        $database = EmployeeEvaluationSystem\Core\Database::getConnection();
+        $permissionService = new EmployeeEvaluationSystem\Core\Services\PermissionService($database);
+        
+        return $permissionService->hasPermission($adminId, $permission, $departmentId);
+    } catch (Exception $e) {
+        error_log("Error checking permission: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Log user activity for audit purposes.
+ */
+function ees_log_activity(string $action, string $entityType, ?int $entityId = null, ?array $oldValues = null, ?array $newValues = null): bool
+{
+    try {
+        $adminId = $_SESSION['admin_id'] ?? 0;
+        
+        if ($adminId === 0) {
+            return false;
+        }
+        
+        $database = EmployeeEvaluationSystem\Core\Database::getConnection();
+        $auditService = new EmployeeEvaluationSystem\Core\Services\AuditService($database);
+        
+        return $auditService->logActivity($adminId, $action, $entityType, $entityId, $oldValues, $newValues);
+    } catch (Exception $e) {
+        error_log("Error logging activity: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Send notification to users.
+ */
+function ees_send_notification(string $type, string $title, string $message, ?int $recipientId = null, array $options = []): ?int
+{
+    try {
+        $database = EmployeeEvaluationSystem\Core\Database::getConnection();
+        $notificationService = new EmployeeEvaluationSystem\Core\Services\NotificationService($database);
+        
+        $notificationData = array_merge([
+            'type' => $type,
+            'title' => $title,
+            'message' => $message,
+            'recipient_id' => $recipientId,
+            'recipient_type' => 'admin',
+            'priority' => 'normal'
+        ], $options);
+        
+        return $notificationService->createNotification($notificationData);
+    } catch (Exception $e) {
+        error_log("Error sending notification: " . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * Cache data with expiration.
+ */
+function ees_cache_set(string $key, mixed $value, int $ttl = 3600): bool
+{
+    try {
+        $cacheDir = __DIR__ . '/../storage/cache/';
+        
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir, 0755, true);
+        }
+        
+        $cacheFile = $cacheDir . md5($key) . '.cache';
+        $cacheData = [
+            'expires' => time() + $ttl,
+            'data' => $value
+        ];
+        
+        return file_put_contents($cacheFile, serialize($cacheData)) !== false;
+    } catch (Exception $e) {
+        error_log("Error setting cache: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Get cached data.
+ */
+function ees_cache_get(string $key): mixed
+{
+    try {
+        $cacheDir = __DIR__ . '/../storage/cache/';
+        $cacheFile = $cacheDir . md5($key) . '.cache';
+        
+        if (!file_exists($cacheFile)) {
+            return null;
+        }
+        
+        $cacheData = unserialize(file_get_contents($cacheFile));
+        
+        if (!$cacheData || !isset($cacheData['expires']) || $cacheData['expires'] < time()) {
+            unlink($cacheFile);
+            return null;
+        }
+        
+        return $cacheData['data'];
+    } catch (Exception $e) {
+        error_log("Error getting cache: " . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * Delete cached data.
+ */
+function ees_cache_delete(string $key): bool
+{
+    try {
+        $cacheDir = __DIR__ . '/../storage/cache/';
+        $cacheFile = $cacheDir . md5($key) . '.cache';
+        
+        if (file_exists($cacheFile)) {
+            return unlink($cacheFile);
+        }
+        
+        return true;
+    } catch (Exception $e) {
+        error_log("Error deleting cache: " . $e->getMessage());
+        return false;
+    }
+}
+
+/**
+ * Clean expired cache files.
+ */
+function ees_cache_clean(): int
+{
+    try {
+        $cacheDir = __DIR__ . '/../storage/cache/';
+        
+        if (!is_dir($cacheDir)) {
+            return 0;
+        }
+        
+        $deletedCount = 0;
+        $files = glob($cacheDir . '*.cache');
+        
+        foreach ($files as $file) {
+            try {
+                $cacheData = unserialize(file_get_contents($file));
+                
+                if (!$cacheData || !isset($cacheData['expires']) || $cacheData['expires'] < time()) {
+                    if (unlink($file)) {
+                        $deletedCount++;
+                    }
+                }
+            } catch (Exception $e) {
+                // Skip invalid cache files
+                continue;
+            }
+        }
+        
+        return $deletedCount;
+    } catch (Exception $e) {
+        error_log("Error cleaning cache: " . $e->getMessage());
+        return 0;
+    }
+}
+
+/**
+ * Rate limiting for API endpoints.
+ */
+function ees_rate_limit(string $identifier, int $maxAttempts = 60, int $timeWindow = 3600): bool
+{
+    try {
+        $cacheKey = 'rate_limit_' . md5($identifier);
+        $current = ees_cache_get($cacheKey);
+        
+        if ($current === null) {
+            ees_cache_set($cacheKey, 1, $timeWindow);
+            return true;
+        }
+        
+        if ($current >= $maxAttempts) {
+            return false;
+        }
+        
+        ees_cache_set($cacheKey, $current + 1, $timeWindow);
+        return true;
+    } catch (Exception $e) {
+        error_log("Error checking rate limit: " . $e->getMessage());
+        return true; // Allow on error
+    }
+}
+
+/**
+ * Generate API response in standardized format.
+ */
+function ees_api_response(bool $success, string $message = '', mixed $data = null, int $statusCode = 200): void
+{
+    http_response_code($statusCode);
+    
+    $response = [
+        'success' => $success,
+        'message' => $message,
+        'timestamp' => date('Y-m-d H:i:s')
+    ];
+    
+    if ($data !== null) {
+        $response['data'] = $data;
+    }
+    
+    echo json_encode($response, JSON_UNESCAPED_UNICODE);
+}
+
+/**
+ * Validate email address with enhanced checks.
+ */
+function ees_validate_email_enhanced(string $email): bool
+{
+    // Basic email validation
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
+    
+    // Additional checks for common issues
+    $email = strtolower(trim($email));
+    
+    // Check for consecutive dots
+    if (strpos($email, '..') !== false) {
+        return false;
+    }
+    
+    // Check for dots at start or end
+    if (str_starts_with($email, '.') || str_ends_with($email, '.')) {
+        return false;
+    }
+    
+    // Check for valid TLD length
+    $parts = explode('@', $email);
+    if (count($parts) !== 2) {
+        return false;
+    }
+    
+    $domain = $parts[1];
+    $domainParts = explode('.', $domain);
+    
+    if (count($domainParts) < 2) {
+        return false;
+    }
+    
+    $tld = end($domainParts);
+    if (strlen($tld) < 2 || strlen($tld) > 63) {
+        return false;
+    }
+    
+    return true;
+}
+
+/**
+ * Generate secure password hash.
+ */
+function ees_hash_password(string $password): string
+{
+    return password_hash($password, PASSWORD_DEFAULT);
+}
+
+/**
+ * Verify password against hash.
+ */
+function ees_verify_password(string $password, string $hash): bool
+{
+    return password_verify($password, $hash);
+}
+
+/**
+ * Generate secure random password.
+ */
+function ees_generate_password(int $length = 12, bool $includeSymbols = true): string
+{
+    $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    
+    if ($includeSymbols) {
+        $characters .= '!@#$%^&*()_+-=[]{}|;:,.<>?';
+    }
+    
+    $password = '';
+    $max = strlen($characters) - 1;
+    
+    for ($i = 0; $i < $length; $i++) {
+        $password .= $characters[random_int(0, $max)];
+    }
+    
+    return $password;
+}
+
+/**
+ * Log error with context information.
+ */
+function ees_log_error(string $message, array $context = []): void
+{
+    $logEntry = [
+        'timestamp' => date('Y-m-d H:i:s'),
+        'message' => $message,
+        'context' => $context,
+        'user_id' => $_SESSION['admin_id'] ?? null,
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? null,
+        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null
+    ];
+    
+    error_log(json_encode($logEntry, JSON_UNESCAPED_UNICODE));
+}
+
+/**
+ * Convert array to CSV format.
+ */
+function ees_array_to_csv(array $data, string $delimiter = ',', string $enclosure = '"'): string
+{
+    $output = fopen('php://temp', 'r+');
+    
+    // Add UTF-8 BOM for Excel compatibility
+    fwrite($output, "\xEF\xBB\xBF");
+    
+    foreach ($data as $row) {
+        fputcsv($output, $row, $delimiter, $enclosure);
+    }
+    
+    rewind($output);
+    $csv = stream_get_contents($output);
+    fclose($output);
+    
+    return $csv;
+}
+
+/**
+ * Send HTTP response with appropriate headers.
+ */
+function ees_send_response(string $content, string $contentType = 'text/html', int $statusCode = 200): void
+{
+    http_response_code($statusCode);
+    header('Content-Type: ' . $contentType . '; charset=UTF-8');
+    header('X-Content-Type-Options: nosniff');
+    header('X-Frame-Options: DENY');
+    header('X-XSS-Protection: 1; mode=block');
+    
+    echo $content;
+}
+
+/**
+ * Check if request is AJAX.
+ */
+function ees_is_ajax(): bool
+{
+    return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && 
+           strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+}
+
+/**
+ * Get client IP address with proxy support.
+ */
+function ees_get_client_ip(): string
+{
+    $ipKeys = ['HTTP_CF_CONNECTING_IP', 'HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'];
+    
+    foreach ($ipKeys as $key) {
+        if (!empty($_SERVER[$key])) {
+            $ip = $_SERVER[$key];
+            
+            // Handle multiple IPs in X-Forwarded-For
+            if (strpos($ip, ',') !== false) {
+                $ip = trim(explode(',', $ip)[0]);
+            }
+            
+            // Validate IP format
+            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                return $ip;
+            }
+        }
+    }
+    
+    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+}
