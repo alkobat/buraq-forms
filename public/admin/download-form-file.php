@@ -31,9 +31,9 @@ try {
             sa.file_path,
             sa.file_name,
             sa.file_size,
-            fs.id as submission_id
+            sa.submission_id,
+            sa.field_id
         FROM submission_answers sa
-        INNER JOIN form_submissions fs ON sa.submission_id = fs.id
         WHERE sa.id = :id AND sa.file_path IS NOT NULL
     ');
     $stmt->execute(['id' => $answerId]);
@@ -66,14 +66,15 @@ try {
     try {
         $logStmt = $pdo->prepare('
             INSERT INTO file_download_logs 
-            (answer_id, submission_id, downloaded_by, downloaded_at, ip_address) 
-            VALUES (:answer_id, :submission_id, :downloaded_by, NOW(), :ip_address)
+            (submission_id, field_id, file_name, downloaded_by, ip_address) 
+            VALUES (:submission_id, :field_id, :file_name, :downloaded_by, :ip_address)
         ');
         $logStmt->execute([
-            'answer_id' => $answerId,
             'submission_id' => $fileData['submission_id'],
+            'field_id' => $fileData['field_id'] ?? null,
+            'file_name' => $fileData['file_name'] ?? null,
             'downloaded_by' => 'admin', // يمكن استبداله بمعرف المستخدم الفعلي
-            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null
+            'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
         ]);
     } catch (PDOException $e) {
         // إذا فشل التسجيل، نتجاهل الخطأ ونكمل التحميل

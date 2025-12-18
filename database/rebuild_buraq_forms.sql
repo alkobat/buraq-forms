@@ -1,11 +1,22 @@
 -- ===================================================================
--- BuraqForms System Database Migration (Core Schema)
--- Description: Core tables + seed data for buraq_forms
+-- BuraqForms - Full Database Rebuild (from scratch)
+-- Database: buraq_forms
+-- Charset : utf8mb4 / utf8mb4_unicode_ci
 -- ===================================================================
 
--- Safely rebuild tables (can be re-run)
+-- 1) Drop + recreate database
+DROP DATABASE IF EXISTS buraq_forms;
+
+CREATE DATABASE IF NOT EXISTS buraq_forms
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+USE buraq_forms;
+
+-- 2) Create tables
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS `file_download_logs`;
 DROP TABLE IF EXISTS `submission_answers`;
 DROP TABLE IF EXISTS `form_submissions`;
 DROP TABLE IF EXISTS `form_fields`;
@@ -17,9 +28,6 @@ DROP TABLE IF EXISTS `system_settings`;
 
 SET FOREIGN_KEY_CHECKS = 1;
 
--- ===================================================================
--- TABLE: admins
--- ===================================================================
 CREATE TABLE `admins` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `name` VARCHAR(100) NOT NULL,
@@ -28,13 +36,10 @@ CREATE TABLE `admins` (
     `role` VARCHAR(50) DEFAULT 'admin',
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX `idx_admins_email` (`email`),
-    INDEX `idx_admins_role` (`role`)
+    INDEX (`email`),
+    INDEX (`role`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ===================================================================
--- TABLE: departments
--- ===================================================================
 CREATE TABLE `departments` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `name` VARCHAR(100) NOT NULL UNIQUE,
@@ -44,13 +49,10 @@ CREATE TABLE `departments` (
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`manager_id`) REFERENCES `admins`(`id`) ON DELETE SET NULL,
-    INDEX `idx_departments_is_active` (`is_active`),
-    INDEX `idx_departments_name` (`name`)
+    INDEX (`is_active`),
+    INDEX (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ===================================================================
--- TABLE: forms
--- ===================================================================
 CREATE TABLE `forms` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `title` VARCHAR(255) NOT NULL,
@@ -63,15 +65,13 @@ CREATE TABLE `forms` (
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`created_by`) REFERENCES `admins`(`id`) ON DELETE CASCADE,
-    INDEX `idx_forms_slug` (`slug`),
-    INDEX `idx_forms_status` (`status`),
-    INDEX `idx_forms_created_by` (`created_by`),
-    INDEX `idx_forms_created_at` (`created_at`)
+    INDEX (`slug`),
+    INDEX (`status`),
+    INDEX (`created_by`),
+    INDEX (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ===================================================================
--- TABLE: form_departments (optional feature: link a form to departments)
--- ===================================================================
+-- Optional (used by the application): link forms to departments
 CREATE TABLE `form_departments` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `form_id` INT NOT NULL,
@@ -80,13 +80,10 @@ CREATE TABLE `form_departments` (
     UNIQUE KEY `unique_form_department` (`form_id`, `department_id`),
     FOREIGN KEY (`form_id`) REFERENCES `forms`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`department_id`) REFERENCES `departments`(`id`) ON DELETE CASCADE,
-    INDEX `idx_form_departments_form_id` (`form_id`),
-    INDEX `idx_form_departments_department_id` (`department_id`)
+    INDEX (`form_id`),
+    INDEX (`department_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ===================================================================
--- TABLE: form_fields
--- ===================================================================
 CREATE TABLE `form_fields` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `form_id` INT NOT NULL,
@@ -110,14 +107,11 @@ CREATE TABLE `form_fields` (
     FOREIGN KEY (`form_id`) REFERENCES `forms`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`parent_field_id`) REFERENCES `form_fields`(`id`) ON DELETE CASCADE,
     UNIQUE KEY `unique_field_per_form` (`form_id`, `field_key`),
-    INDEX `idx_form_fields_form_id` (`form_id`),
-    INDEX `idx_form_fields_field_type` (`field_type`),
-    INDEX `idx_form_fields_parent_field_id` (`parent_field_id`)
+    INDEX (`form_id`),
+    INDEX (`field_type`),
+    INDEX (`parent_field_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ===================================================================
--- TABLE: form_submissions
--- ===================================================================
 CREATE TABLE `form_submissions` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `form_id` INT NOT NULL,
@@ -131,17 +125,14 @@ CREATE TABLE `form_submissions` (
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`form_id`) REFERENCES `forms`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`department_id`) REFERENCES `departments`(`id`) ON DELETE SET NULL,
-    INDEX `idx_form_submissions_form_id` (`form_id`),
-    INDEX `idx_form_submissions_department_id` (`department_id`),
-    INDEX `idx_form_submissions_reference_code` (`reference_code`),
-    INDEX `idx_form_submissions_status` (`status`),
-    INDEX `idx_form_submissions_submitted_at` (`submitted_at`),
-    INDEX `idx_form_submissions_submitted_by` (`submitted_by`)
+    INDEX (`form_id`),
+    INDEX (`department_id`),
+    INDEX (`reference_code`),
+    INDEX (`status`),
+    INDEX (`submitted_at`),
+    INDEX (`submitted_by`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ===================================================================
--- TABLE: submission_answers
--- ===================================================================
 CREATE TABLE `submission_answers` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `submission_id` INT NOT NULL,
@@ -155,50 +146,53 @@ CREATE TABLE `submission_answers` (
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`submission_id`) REFERENCES `form_submissions`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`field_id`) REFERENCES `form_fields`(`id`) ON DELETE CASCADE,
-    INDEX `idx_submission_answers_submission_id` (`submission_id`),
-    INDEX `idx_submission_answers_field_id` (`field_id`),
-    INDEX `idx_submission_answers_repeat_index` (`repeat_index`)
+    INDEX (`submission_id`),
+    INDEX (`field_id`),
+    INDEX (`repeat_index`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ===================================================================
--- TABLE: system_settings
--- ===================================================================
 CREATE TABLE `system_settings` (
     `id` INT PRIMARY KEY AUTO_INCREMENT,
     `setting_key` VARCHAR(100) UNIQUE NOT NULL,
     `setting_value` JSON,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    INDEX `idx_system_settings_key` (`setting_key`)
+    INDEX (`setting_key`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- ===================================================================
--- SEED DATA
--- ===================================================================
+CREATE TABLE `file_download_logs` (
+    `id` INT PRIMARY KEY AUTO_INCREMENT,
+    `submission_id` INT NOT NULL,
+    `field_id` INT NULL,
+    `file_name` VARCHAR(255),
+    `downloaded_by` VARCHAR(255),
+    `ip_address` VARCHAR(45),
+    `downloaded_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (`submission_id`) REFERENCES `form_submissions`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`field_id`) REFERENCES `form_fields`(`id`) ON DELETE SET NULL,
+    INDEX (`submission_id`),
+    INDEX (`downloaded_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Default admin (password hash corresponds to "password")
+-- 3) Seed data
 INSERT IGNORE INTO `admins` (`id`, `name`, `email`, `password`, `role`) VALUES
 (1, 'System Administrator', 'admin@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin');
 
--- Default departments (as per ticket)
-INSERT IGNORE INTO `departments` (`id`, `name`, `description`, `is_active`) VALUES
-(1, 'الموارد البشرية', 'قسم الموارد البشرية', 1),
-(2, 'تكنولوجيا المعلومات', 'قسم تكنولوجيا المعلومات', 1),
-(3, 'المبيعات', 'قسم المبيعات', 1),
-(4, 'التطوير', 'قسم التطوير والمشاريع', 1);
+INSERT INTO `departments` (`name`, `description`, `is_active`) VALUES
+('الموارد البشرية', 'قسم الموارد البشرية', 1),
+('تكنولوجيا المعلومات', 'قسم تكنولوجيا المعلومات', 1),
+('المبيعات', 'قسم المبيعات', 1),
+('التطوير', 'قسم التطوير والمشاريع', 1)
+ON DUPLICATE KEY UPDATE `description` = VALUES(`description`), `is_active` = VALUES(`is_active`);
 
--- System settings (as per ticket) + a few keys used by the application
 INSERT INTO `system_settings` (`setting_key`, `setting_value`) VALUES
 ('forms_allowed_mime', '["image/jpeg", "image/png", "image/gif", "application/pdf", "application/msword", "application/vnd.ms-excel"]'),
 ('forms_max_upload_mb', '10'),
 ('pagination_limit', '20'),
-('items_per_page', '20'),
-('forms_upload_path', '"storage/forms/"'),
-('reference_code_prefix', '"REF-"'),
-('reference_code_length', '8')
-ON DUPLICATE KEY UPDATE
-    `setting_value` = VALUES(`setting_value`),
-    `updated_at` = CURRENT_TIMESTAMP;
+('items_per_page', '20')
+ON DUPLICATE KEY UPDATE `setting_value` = VALUES(`setting_value`), `updated_at` = CURRENT_TIMESTAMP;
 
--- Verification
-SELECT 'Core migration completed successfully' AS status;
+-- 4) Verify
+SHOW TABLES;
+SELECT * FROM departments;
+SELECT setting_key, setting_value FROM system_settings;

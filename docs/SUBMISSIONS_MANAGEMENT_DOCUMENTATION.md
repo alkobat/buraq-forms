@@ -99,7 +99,7 @@ formatFileSize($bytes)                // تحويل الحجم لصيغة مقر
 #### تسجيل التحميلات:
 ```sql
 INSERT INTO file_download_logs 
-(answer_id, submission_id, downloaded_by, downloaded_at, ip_address) 
+(submission_id, field_id, file_name, downloaded_by, ip_address, downloaded_at) 
 VALUES (...)
 ```
 

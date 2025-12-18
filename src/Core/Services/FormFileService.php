@@ -155,14 +155,37 @@ class FormFileService
             throw new FileStorageException('Unable to determine file extension.');
         }
 
-        $allowed = array_map('strtolower', $this->settings->getJsonList('forms_allowed_mime', []));
-        if ($allowed !== [] && !in_array($extension, $allowed, true)) {
-            throw new FileStorageException('File type not allowed: ' . $extension);
-        }
-
         $finfo = new finfo(FILEINFO_MIME_TYPE);
         $mime = $finfo->file($tmp);
         $mime = is_string($mime) ? $mime : 'application/octet-stream';
+
+        $allowed = array_values(array_filter(array_map('strtolower', $this->settings->getJsonList('forms_allowed_mime', []))));
+        if ($allowed !== []) {
+            $allowedMimes = array_values(array_filter($allowed, static fn (string $v): bool => str_contains($v, '/')));
+            $allowedExts = array_values(array_filter($allowed, static fn (string $v): bool => !str_contains($v, '/')));
+
+            $mimeLc = strtolower($mime);
+
+            $ok = false;
+            if ($allowedMimes !== [] && in_array($mimeLc, $allowedMimes, true)) {
+                $ok = true;
+            }
+            if ($allowedExts !== [] && in_array($extension, $allowedExts, true)) {
+                $ok = true;
+            }
+
+            // If the setting only contains one type of values, enforce that list.
+            if ($allowedMimes !== [] && $allowedExts === [] && !in_array($mimeLc, $allowedMimes, true)) {
+                $ok = false;
+            }
+            if ($allowedExts !== [] && $allowedMimes === [] && !in_array($extension, $allowedExts, true)) {
+                $ok = false;
+            }
+
+            if (!$ok) {
+                throw new FileStorageException('File type not allowed: ' . $mime . ' (' . $extension . ')');
+            }
+        }
 
         return [
             'tmp_name' => $tmp,
