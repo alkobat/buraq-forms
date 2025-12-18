@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace EmployeeEvaluationSystem\Core\Exceptions;
+namespace BuraqForms\Core\Exceptions;
 
 /**
  * Thrown when a requested entity cannot be found.

@@ -1,12 +1,12 @@
 {
-    "name": "employee-evaluation-system",
+    "name": "buraqforms/buraqforms",
     "description": "نظام شامل لإدارة الاستمارات الديناميكية وتقييم الموظفين",
     "type": "project",
-    "keywords": ["employee", "evaluation", "forms", "dynamic-forms", "php", "mysql"],
+    "keywords": ["forms", "dynamic-forms", "buraqforms", "php", "mysql"],
     "license": "MIT",
     "authors": [
         {
-            "name": "Employee Evaluation System Team",
+            "name": "BuraqForms Team",
             "email": "admin@example.com"
         }
     ],
@@ -27,7 +27,7 @@
     },
     "autoload": {
         "psr-4": {
-            "EmployeeEvaluationSystem\\": "src/"
+            "BuraqForms\\": "src/"
         },
         "files": [
             "src/helpers.php"
@@ -35,7 +35,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "EmployeeEvaluationSystem\\Tests\\": "tests/"
+            "BuraqForms\\Tests\\": "tests/"
         }
     },
     "scripts": {
@@ -44,8 +44,8 @@
         "cs-fix": "phpcbf",
         "stan": "phpstan analyse",
         "install-db": [
-            "mysql -u root -p -e \"CREATE DATABASE IF NOT EXISTS employee_evaluation_system;\"",
-            "mysql -u root -p employee_evaluation_system < database/migrations/2024_01_01_000000_create_employee_evaluation_system_tables.sql"
+            "mysql -u root -p -e \"CREATE DATABASE IF NOT EXISTS buraqforms;\"",
+            "mysql -u root -p buraqforms < database/migrations/2024_01_01_000000_create_buraqforms_tables.sql"
         ],
         "setup": [
             "composer install",
@@ -65,13 +65,13 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "support": {
-        "issues": "https://github.com/employee-evaluation-system/issues",
-        "wiki": "https://github.com/employee-evaluation-system/wiki"
+        "issues": "https://github.com/buraqforms/issues",
+        "wiki": "https://github.com/buraqforms/wiki"
     },
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/employee-evaluation-system"
+            "url": "https://github.com/buraqforms"
         }
     ]
 }

@@ -20,8 +20,8 @@ if (!$isAdmin) {
 }
 
 // إنشاء الخدمات
-$formService = new EmployeeEvaluationSystem\Core\Services\FormService($pdo);
-$departmentService = new EmployeeEvaluationSystem\Core\Services\DepartmentService($pdo);
+$formService = new BuraqForms\Core\Services\FormService($pdo);
+$departmentService = new BuraqForms\Core\Services\DepartmentService($pdo);
 
 $error = null;
 $success = null;

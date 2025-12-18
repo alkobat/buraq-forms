@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use EmployeeEvaluationSystem\Core\Database;
-use EmployeeEvaluationSystem\Core\Services\CommentService;
-use EmployeeEvaluationSystem\Core\Services\PermissionService;
-use EmployeeEvaluationSystem\Core\Services\AuditService;
+use BuraqForms\Core\Database;
+use BuraqForms\Core\Services\CommentService;
+use BuraqForms\Core\Services\PermissionService;
+use BuraqForms\Core\Services\AuditService;
 
 // إعداد الجلسة والتحقق من الصلاحية
 session_start();

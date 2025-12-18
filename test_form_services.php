@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 require __DIR__ . '/vendor/autoload.php';
 
-use EmployeeEvaluationSystem\Core\Cache\FileCache;
-use EmployeeEvaluationSystem\Core\Database;
-use EmployeeEvaluationSystem\Core\Logger;
-use EmployeeEvaluationSystem\Core\Services\FormFieldService;
-use EmployeeEvaluationSystem\Core\Services\FormService;
-use EmployeeEvaluationSystem\Core\Services\FormSubmissionService;
-use EmployeeEvaluationSystem\Core\Services\SystemSettingsService;
+use BuraqForms\Core\Cache\FileCache;
+use BuraqForms\Core\Database;
+use BuraqForms\Core\Logger;
+use BuraqForms\Core\Services\FormFieldService;
+use BuraqForms\Core\Services\FormService;
+use BuraqForms\Core\Services\FormSubmissionService;
+use BuraqForms\Core\Services\SystemSettingsService;
 
 $logger = new Logger();
 $cache = new FileCache(__DIR__ . '/cache');

@@ -3,11 +3,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use EmployeeEvaluationSystem\Core\Database;
-use EmployeeEvaluationSystem\Core\Services\TemplateService;
-use EmployeeEvaluationSystem\Core\Services\PermissionService;
-use EmployeeEvaluationSystem\Core\Services\AuditService;
-use EmployeeEvaluationSystem\Core\Services\FormService;
+use BuraqForms\Core\Database;
+use BuraqForms\Core\Services\TemplateService;
+use BuraqForms\Core\Services\PermissionService;
+use BuraqForms\Core\Services\AuditService;
+use BuraqForms\Core\Services\FormService;
 
 // إعداد الجلسة والتحقق من الصلاحية
 session_start();
@@ -189,7 +189,7 @@ $templateStats = $templateService->getTemplateStats();
 $allForms = $formService->getAllForms();
 
 // جلب الإدارات
-$departmentService = new \EmployeeEvaluationSystem\Core\Services\DepartmentService($database);
+$departmentService = new \BuraqForms\Core\Services\DepartmentService($database);
 $departments = $departmentService->getAllDepartments();
 ?>
 <!DOCTYPE html>

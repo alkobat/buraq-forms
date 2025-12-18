@@ -8,12 +8,12 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-W
 
 require_once __DIR__ . '/../../../vendor/autoload.php';
 
-use EmployeeEvaluationSystem\Core\Database;
-use EmployeeEvaluationSystem\Core\Services\NotificationService;
-use EmployeeEvaluationSystem\Core\Services\AuditService;
-use EmployeeEvaluationSystem\Core\Services\CommentService;
-use EmployeeEvaluationSystem\Core\Services\BackupService;
-use EmployeeEvaluationSystem\Core\Services\SystemSettingsService;
+use BuraqForms\Core\Database;
+use BuraqForms\Core\Services\NotificationService;
+use BuraqForms\Core\Services\AuditService;
+use BuraqForms\Core\Services\CommentService;
+use BuraqForms\Core\Services\BackupService;
+use BuraqForms\Core\Services\SystemSettingsService;
 
 session_start();
 

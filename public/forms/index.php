@@ -8,8 +8,8 @@ require_once __DIR__ . '/../../src/Core/Services/DepartmentService.php';
 
 session_start();
 
-$formService = new EmployeeEvaluationSystem\Core\Services\FormService($pdo);
-$departmentService = new EmployeeEvaluationSystem\Core\Services\DepartmentService($pdo);
+$formService = new BuraqForms\Core\Services\FormService($pdo);
+$departmentService = new BuraqForms\Core\Services\DepartmentService($pdo);
 
 $selectedDepartment = isset($_GET['department']) ? (int)$_GET['department'] : 0;
 $searchQuery = isset($_GET['search']) ? trim($_GET['search']) : '';

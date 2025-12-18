@@ -49,8 +49,8 @@ if (!filter_var($submittedBy, FILTER_VALIDATE_EMAIL)) {
 $departmentId = isset($_POST['department_id']) && !empty($_POST['department_id']) ? (int)$_POST['department_id'] : null;
 
 try {
-    $submissionService = new EmployeeEvaluationSystem\Core\Services\FormSubmissionService($pdo);
-    $formService = new EmployeeEvaluationSystem\Core\Services\FormService($pdo);
+    $submissionService = new BuraqForms\Core\Services\FormSubmissionService($pdo);
+    $formService = new BuraqForms\Core\Services\FormService($pdo);
     
     $form = $formService->getById($formId);
     
@@ -92,7 +92,7 @@ try {
         'submission_id' => $submission['id']
     ]);
     
-} catch (EmployeeEvaluationSystem\Core\Exceptions\ValidationException $e) {
+} catch (BuraqForms\Core\Exceptions\ValidationException $e) {
     $errors = $e->getErrors();
     $errorMessages = [];
     foreach ($errors as $field => $fieldErrors) {
@@ -100,7 +100,7 @@ try {
     }
     sendJsonResponse(false, 'فشل التحقق من البيانات: ' . implode('; ', $errorMessages));
     
-} catch (EmployeeEvaluationSystem\Core\Exceptions\ServiceException $e) {
+} catch (BuraqForms\Core\Exceptions\ServiceException $e) {
     sendJsonResponse(false, $e->getMessage());
     
 } catch (Exception $e) {

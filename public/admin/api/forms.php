@@ -7,8 +7,8 @@ require_once __DIR__ . '/../../../config/database.php';
 require_once __DIR__ . '/../../../src/Core/Services/FormService.php';
 require_once __DIR__ . '/../../../src/Core/Services/FormFieldService.php';
 
-use EmployeeEvaluationSystem\Core\Services\FormService;
-use EmployeeEvaluationSystem\Core\Services\FormFieldService;
+use BuraqForms\Core\Services\FormService;
+use BuraqForms\Core\Services\FormFieldService;
 
 // إعداد headers للـ JSON API
 header('Content-Type: application/json; charset=utf-8');
