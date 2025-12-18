@@ -68,7 +68,8 @@
 - Whitelist: storage/forms/ فقط
 - Secure streaming بدون expose المسار
 - Logging في file_download_logs:
-  - answer_id, submission_id
+  - submission_id, field_id
+  - file_name
   - downloaded_by, downloaded_at
   - ip_address
 

@@ -44,8 +44,9 @@
         "cs-fix": "phpcbf",
         "stan": "phpstan analyse",
         "install-db": [
-            "mysql -u root -p -e \"CREATE DATABASE IF NOT EXISTS buraqforms;\"",
-            "mysql -u root -p buraqforms < database/migrations/2024_01_01_000000_create_buraqforms_tables.sql"
+            "mysql -u root -p -e \"CREATE DATABASE IF NOT EXISTS buraq_forms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\"",
+            "mysql -u root -p buraq_forms < database/migrations/2024_01_01_000000_create_buraqforms_tables.sql",
+            "mysql -u root -p buraq_forms < database/migrations/2024_01_02_000000_add_file_download_logs_table.sql"
         ],
         "setup": [
             "composer install",

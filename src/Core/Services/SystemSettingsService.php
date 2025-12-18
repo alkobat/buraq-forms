@@ -96,10 +96,29 @@ class SystemSettingsService
             return null;
         }
 
-        $value = $row['setting_value'];
+        $value = $this->decodeJsonValue($row['setting_value']);
 
         if ($this->cache !== null) {
             $this->cache->set($cacheKey, $value, 300);
+        }
+
+        return $value;
+    }
+
+    private function decodeJsonValue(mixed $value): mixed
+    {
+        if (!is_string($value)) {
+            return $value;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return $value;
+        }
+
+        $decoded = json_decode($trimmed, true);
+        if (json_last_error() === JSON_ERROR_NONE) {
+            return $decoded;
         }
 
         return $value;
