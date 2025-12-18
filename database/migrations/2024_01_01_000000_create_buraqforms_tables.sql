@@ -1,5 +1,5 @@
 -- ===================================================================
--- Employee Evaluation System Database Migration
+-- BuraqForms System Database Migration
 -- Created: 2024-01-01
 -- Description: Complete database structure for dynamic forms system
 -- ===================================================================

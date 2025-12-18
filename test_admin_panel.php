@@ -47,10 +47,10 @@ try {
     
     // فحص وجود الكلاسات
     $classes = [
-        'EmployeeEvaluationSystem\\Core\\Database',
-        'EmployeeEvaluationSystem\\Core\\Services\\FormService',
-        'EmployeeEvaluationSystem\\Core\\Services\\FormFieldService',
-        'EmployeeEvaluationSystem\\Core\\Services\\DepartmentService'
+        'BuraqForms\\Core\\Database',
+        'BuraqForms\\Core\\Services\\FormService',
+        'BuraqForms\\Core\\Services\\FormFieldService',
+        'BuraqForms\\Core\\Services\\DepartmentService'
     ];
     
     foreach ($classes as $class) {

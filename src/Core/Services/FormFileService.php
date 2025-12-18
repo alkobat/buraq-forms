@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace EmployeeEvaluationSystem\Core\Services;
+namespace BuraqForms\Core\Services;
 
-use EmployeeEvaluationSystem\Core\Cache\FileCache;
-use EmployeeEvaluationSystem\Core\Exceptions\FileStorageException;
-use EmployeeEvaluationSystem\Core\Logger;
+use BuraqForms\Core\Cache\FileCache;
+use BuraqForms\Core\Exceptions\FileStorageException;
+use BuraqForms\Core\Logger;
 use finfo;
 use PDO;
 

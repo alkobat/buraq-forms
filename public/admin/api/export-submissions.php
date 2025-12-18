@@ -19,8 +19,8 @@ if (!$isAdmin) {
 }
 
 // إنشاء الخدمات
-$formService = new EmployeeEvaluationSystem\Core\Services\FormService($pdo);
-$formFieldService = new EmployeeEvaluationSystem\Core\Services\FormFieldService($pdo);
+$formService = new BuraqForms\Core\Services\FormService($pdo);
+$formFieldService = new BuraqForms\Core\Services\FormFieldService($pdo);
 
 // تحديد صيغة التصدير
 $format = $_GET['format'] ?? 'csv';

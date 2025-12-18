@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace EmployeeEvaluationSystem\Core\Services;
+namespace BuraqForms\Core\Services;
 
-use EmployeeEvaluationSystem\Core\Database;
-use EmployeeEvaluationSystem\Core\Logger;
+use BuraqForms\Core\Database;
+use BuraqForms\Core\Logger;
 use PDO;
 use Exception;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;

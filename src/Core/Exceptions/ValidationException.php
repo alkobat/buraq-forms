@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace EmployeeEvaluationSystem\Core\Exceptions;
+namespace BuraqForms\Core\Exceptions;
 
 /**
  * Thrown when user input or submission data fails validation.

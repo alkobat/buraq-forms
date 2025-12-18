@@ -20,9 +20,9 @@ if (empty($slug)) {
     exit;
 }
 
-$formService = new EmployeeEvaluationSystem\Core\Services\FormService($pdo);
-$fieldService = new EmployeeEvaluationSystem\Core\Services\FormFieldService($pdo);
-$departmentService = new EmployeeEvaluationSystem\Core\Services\DepartmentService($pdo);
+$formService = new BuraqForms\Core\Services\FormService($pdo);
+$fieldService = new BuraqForms\Core\Services\FormFieldService($pdo);
+$departmentService = new BuraqForms\Core\Services\DepartmentService($pdo);
 
 try {
     $form = $formService->getBySlug($slug);

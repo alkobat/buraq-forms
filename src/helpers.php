@@ -537,8 +537,8 @@ function ees_has_permission(string $permission, ?int $adminId = null, ?int $depa
     }
     
     try {
-        $database = EmployeeEvaluationSystem\Core\Database::getConnection();
-        $permissionService = new EmployeeEvaluationSystem\Core\Services\PermissionService($database);
+        $database = BuraqForms\Core\Database::getConnection();
+        $permissionService = new BuraqForms\Core\Services\PermissionService($database);
         
         return $permissionService->hasPermission($adminId, $permission, $departmentId);
     } catch (Exception $e) {
@@ -559,8 +559,8 @@ function ees_log_activity(string $action, string $entityType, ?int $entityId = n
             return false;
         }
         
-        $database = EmployeeEvaluationSystem\Core\Database::getConnection();
-        $auditService = new EmployeeEvaluationSystem\Core\Services\AuditService($database);
+        $database = BuraqForms\Core\Database::getConnection();
+        $auditService = new BuraqForms\Core\Services\AuditService($database);
         
         return $auditService->logActivity($adminId, $action, $entityType, $entityId, $oldValues, $newValues);
     } catch (Exception $e) {
@@ -575,8 +575,8 @@ function ees_log_activity(string $action, string $entityType, ?int $entityId = n
 function ees_send_notification(string $type, string $title, string $message, ?int $recipientId = null, array $options = []): ?int
 {
     try {
-        $database = EmployeeEvaluationSystem\Core\Database::getConnection();
-        $notificationService = new EmployeeEvaluationSystem\Core\Services\NotificationService($database);
+        $database = BuraqForms\Core\Database::getConnection();
+        $notificationService = new BuraqForms\Core\Services\NotificationService($database);
         
         $notificationData = array_merge([
             'type' => $type,

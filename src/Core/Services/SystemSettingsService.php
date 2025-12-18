@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace EmployeeEvaluationSystem\Core\Services;
+namespace BuraqForms\Core\Services;
 
-use EmployeeEvaluationSystem\Core\Cache\FileCache;
-use EmployeeEvaluationSystem\Core\Exceptions\DatabaseException;
+use BuraqForms\Core\Cache\FileCache;
+use BuraqForms\Core\Exceptions\DatabaseException;
 use PDO;
 use PDOException;
 

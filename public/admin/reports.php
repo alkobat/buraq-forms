@@ -3,10 +3,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-use EmployeeEvaluationSystem\Core\Database;
-use EmployeeEvaluationSystem\Core\Services\ReportService;
-use EmployeeEvaluationSystem\Core\Services\PermissionService;
-use EmployeeEvaluationSystem\Core\Services\AuditService;
+use BuraqForms\Core\Database;
+use BuraqForms\Core\Services\ReportService;
+use BuraqForms\Core\Services\PermissionService;
+use BuraqForms\Core\Services\AuditService;
 
 // إعداد الجلسة والتحقق من الصلاحية
 session_start();
@@ -93,9 +93,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // جلب البيانات
 $allReports = $reportService->getAllCustomReports($adminId);
-$departmentService = new \EmployeeEvaluationSystem\Core\Services\DepartmentService($database);
+$departmentService = new \BuraqForms\Core\Services\DepartmentService($database);
 $departments = $departmentService->getAllDepartments();
-$formService = new \EmployeeEvaluationSystem\Core\Services\FormService($database);
+$formService = new \BuraqForms\Core\Services\FormService($database);
 $forms = $formService->getAllForms();
 
 // جلب التقارير السابقة للتنفيذ

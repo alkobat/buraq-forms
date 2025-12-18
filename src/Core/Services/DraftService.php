@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace EmployeeEvaluationSystem\Core\Services;
+namespace BuraqForms\Core\Services;
 
-use EmployeeEvaluationSystem\Core\Database;
+use BuraqForms\Core\Database;
 use PDO;
 use Exception;
 

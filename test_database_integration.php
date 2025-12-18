@@ -42,7 +42,7 @@ try {
     echo "<h3>اختبار التوافق مع النظام الحالي</h3>";
     
     // Check if we can use the connection with existing system
-    if (class_exists('\\EmployeeEvaluationSystem\\Core\\Database')) {
+    if (class_exists('\\BuraqForms\\Core\\Database')) {
         echo "✅ فئة Database الموجودة في النظام متاحة<br>";
         
         try {
@@ -60,7 +60,7 @@ try {
                 ]
             ];
             
-            $systemConnection = \\EmployeeEvaluationSystem\\Core\\Database::createConnection($systemConfig);
+            $systemConnection = \\BuraqForms\\Core\\Database::createConnection($systemConfig);
             echo "✅ تم إنشاء اتصال باستخدام فئة Database الموجودة<br>";
             
         } catch (Exception $e) {

@@ -6,7 +6,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../../config/database.php';
 require_once __DIR__ . '/../../../src/Core/Services/DepartmentService.php';
 
-use EmployeeEvaluationSystem\Core\Services\DepartmentService;
+use BuraqForms\Core\Services\DepartmentService;
 
 // إعداد headers للـ JSON API
 header('Content-Type: application/json; charset=utf-8');

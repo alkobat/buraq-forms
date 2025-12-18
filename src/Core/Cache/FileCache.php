@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace EmployeeEvaluationSystem\Core\Cache;
+namespace BuraqForms\Core\Cache;
 
 /**
  * Simple file-based cache with TTL.

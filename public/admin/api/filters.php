@@ -8,10 +8,10 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-W
 
 require_once __DIR__ . '/../../../vendor/autoload.php';
 
-use EmployeeEvaluationSystem\Core\Database;
-use EmployeeEvaluationSystem\Core\Services\FilterService;
-use EmployeeEvaluationSystem\Core\Services\PermissionService;
-use EmployeeEvaluationSystem\Core\Services\AuditService;
+use BuraqForms\Core\Database;
+use BuraqForms\Core\Services\FilterService;
+use BuraqForms\Core\Services\PermissionService;
+use BuraqForms\Core\Services\AuditService;
 
 session_start();
 

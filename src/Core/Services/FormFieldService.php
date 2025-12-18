@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace EmployeeEvaluationSystem\Core\Services;
+namespace BuraqForms\Core\Services;
 
-use EmployeeEvaluationSystem\Core\Exceptions\DatabaseException;
-use EmployeeEvaluationSystem\Core\Exceptions\NotFoundException;
-use EmployeeEvaluationSystem\Core\Exceptions\ServiceException;
-use EmployeeEvaluationSystem\Core\Logger;
+use BuraqForms\Core\Exceptions\DatabaseException;
+use BuraqForms\Core\Exceptions\NotFoundException;
+use BuraqForms\Core\Exceptions\ServiceException;
+use BuraqForms\Core\Logger;
 use PDO;
 use PDOException;
 

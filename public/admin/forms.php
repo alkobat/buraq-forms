@@ -18,7 +18,7 @@ if (!$isAdmin) {
 }
 
 // إنشاء خدمة إدارة الاستمارات
-$formService = new EmployeeEvaluationSystem\Core\Services\FormService($pdo);
+$formService = new BuraqForms\Core\Services\FormService($pdo);
 
 $error = null;
 $success = null;

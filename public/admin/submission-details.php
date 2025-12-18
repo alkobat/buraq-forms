@@ -20,9 +20,9 @@ if (!$isAdmin) {
 }
 
 // إنشاء الخدمات
-$formService = new EmployeeEvaluationSystem\Core\Services\FormService($pdo);
-$formFieldService = new EmployeeEvaluationSystem\Core\Services\FormFieldService($pdo);
-$submissionService = new EmployeeEvaluationSystem\Core\Services\FormSubmissionService($pdo);
+$formService = new BuraqForms\Core\Services\FormService($pdo);
+$formFieldService = new BuraqForms\Core\Services\FormFieldService($pdo);
+$submissionService = new BuraqForms\Core\Services\FormSubmissionService($pdo);
 
 // جلب معرف الإجابة
 $submissionId = isset($_GET['id']) ? (int)$_GET['id'] : 0;

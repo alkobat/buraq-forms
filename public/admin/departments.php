@@ -18,7 +18,7 @@ if (!$isAdmin) {
 }
 
 // إنشاء خدمة إدارة الإدارات
-$departmentService = new EmployeeEvaluationSystem\Core\Services\DepartmentService($pdo);
+$departmentService = new BuraqForms\Core\Services\DepartmentService($pdo);
 
 $error = null;
 $success = null;
