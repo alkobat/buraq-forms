@@ -474,6 +474,157 @@ function ees_english_to_arabic_numerals(string $text): string
     return str_replace($englishNumerals, $arabicNumerals, $text);
 }
 
+// ========================================
+// AUTHENTICATION HELPER FUNCTIONS
+// ========================================
+
+use BuraqForms\Core\Auth;
+
+/**
+ * Check if user is logged in
+ */
+function is_logged_in(): bool
+{
+    return Auth::is_logged_in();
+}
+
+/**
+ * Get current logged-in user data
+ */
+function current_user(): ?array
+{
+    return Auth::current_user();
+}
+
+/**
+ * Require authentication - redirect to login if not logged in
+ */
+function require_auth(): void
+{
+    Auth::require_auth();
+}
+
+/**
+ * Require specific role
+ */
+function require_role(string $role): void
+{
+    Auth::require_role($role);
+}
+
+/**
+ * Login user with email and password
+ */
+function login_user(string $email, string $password, bool $remember_me = false): array
+{
+    return Auth::login_user($email, $password, $remember_me);
+}
+
+/**
+ * Logout user securely
+ */
+function logout_user(): void
+{
+    Auth::logout_user();
+}
+
+/**
+ * Generate CSRF token
+ */
+function generate_csrf_token(): string
+{
+    return Auth::generate_csrf_token();
+}
+
+/**
+ * Verify CSRF token
+ */
+function verify_csrf_token(?string $token): bool
+{
+    return Auth::verify_csrf_token($token);
+}
+
+/**
+ * Generate remember me token
+ */
+function generate_remember_token(): string
+{
+    return Auth::generate_remember_token();
+}
+
+/**
+ * Validate session security
+ */
+function validate_session(): bool
+{
+    return Auth::validate_session();
+}
+
+/**
+ * Check if user has specific permission based on role
+ */
+function has_permission(string $permission): bool
+{
+    $user = current_user();
+    if (!$user) {
+        return false;
+    }
+
+    $role = $user['role'] ?? 'editor';
+    
+    $permissions = [
+        'admin' => ['*'], // Admin has all permissions
+        'manager' => [
+            'forms.view', 'forms.create', 'forms.edit', 'forms.delete',
+            'submissions.view', 'submissions.export',
+            'admin.view'
+        ],
+        'editor' => [
+            'forms.view', 'forms.create', 'forms.edit',
+            'submissions.view'
+        ]
+    ];
+
+    $role_permissions = $permissions[$role] ?? [];
+    
+    return in_array('*', $role_permissions) || in_array($permission, $role_permissions);
+}
+
+/**
+ * Get available roles in the system
+ */
+function get_available_roles(): array
+{
+    return [
+        'admin' => 'مدير النظام',
+        'manager' => 'مدير',
+        'editor' => 'محرر'
+    ];
+}
+
+/**
+ * Check if user can access specific module
+ */
+function can_access(string $module): bool
+{
+    $user = current_user();
+    if (!$user) {
+        return false;
+    }
+
+    $role = $user['role'] ?? 'editor';
+    
+    $module_access = [
+        'admin' => ['*'],
+        'manager' => ['dashboard', 'forms', 'submissions', 'admin'],
+        'editor' => ['dashboard', 'forms', 'submissions']
+    ];
+
+    $allowed_modules = $module_access[$role] ?? [];
+    
+    return in_array('*', $allowed_modules) || in_array($module, $allowed_modules);
+}
+
 /**
  * Validate Saudi phone number.
  */

@@ -1,6 +1,19 @@
 <?php
 declare(strict_types=1);
 
+// Include required files
+require_once __DIR__ . '/../../src/helpers.php';
+require_once __DIR__ . '/../../src/Core/Auth.php';
+
+// Require admin authentication only
+require_role('admin');
+
+// Validate session security
+if (!validate_session()) {
+    header('Location: ../login.php');
+    exit;
+}
+
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use BuraqForms\Core\Database;
@@ -8,21 +21,15 @@ use BuraqForms\Core\Services\PermissionService;
 use BuraqForms\Core\Services\AuditService;
 use BuraqForms\Core\Services\DepartmentService;
 
-// إعداد الجلسة والتحقق من الصلاحية
-session_start();
-
 $database = Database::getConnection();
 $permissionService = new PermissionService($database);
 $auditService = new AuditService($database);
 $departmentService = new DepartmentService($database);
 
-// التحقق من تسجيل الدخول
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: login.php');
-    exit;
-}
-
 $adminId = $_SESSION['admin_id'] ?? 0;
+
+// Get current user info
+$current_user = current_user();
 
 // التحقق من الصلاحية (يتطلب صلاحية إدارة المستخدمين)
 if (!$permissionService->hasPermission($adminId, 'users.manage')) {
