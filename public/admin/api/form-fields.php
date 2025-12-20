@@ -20,15 +20,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-// بدء الجلسة
-session_start();
+// التحقق من المصادقة
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
-// التحقق من الصلاحيات (مؤقتاً)
-$isAdmin = true; // يجب التحقق من تسجيل الدخول في التطبيق الحقيقي
-
-if (!$isAdmin) {
-    http_response_code(403);
-    echo json_encode(['error' => 'غير مسموح بالوصول']);
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
+    http_response_code(401);
+    echo json_encode(['error' => 'الرجاء تسجيل الدخول']);
     exit;
 }
 

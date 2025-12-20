@@ -2,21 +2,13 @@
 
 declare(strict_types=1);
 
+// استدعاء فحص المصادقة
+require_once __DIR__ . '/../auth-check.php';
+
 // تضمين الإعدادات
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../src/Core/Services/DepartmentService.php';
 require_once __DIR__ . '/../../src/Core/Services/FormService.php';
-
-// بدء الجلسة
-session_start();
-
-// التحقق من الصلاحيات (مؤقتاً)
-$isAdmin = true; // يمكن تغييره حسب نظام المصادقة
-
-if (!$isAdmin) {
-    http_response_code(403);
-    die('غير مسموح بالوصول');
-}
 
 // إنشاء الخدمات
 $departmentService = new BuraqForms\Core\Services\DepartmentService($pdo);
@@ -137,6 +129,12 @@ try {
                             <a class="nav-link" href="form-submissions.php">
                                 <i class="fas fa-inbox"></i>
                                 الإجابات
+                            </a>
+                        </li>
+                        <li class="nav-item mt-3">
+                            <a class="nav-link text-danger" href="../logout.php">
+                                <i class="fas fa-sign-out-alt"></i>
+                                تسجيل الخروج
                             </a>
                         </li>
                     </ul>

@@ -5,16 +5,8 @@ declare(strict_types=1);
 // تضمين الإعدادات
 require_once __DIR__ . '/../../config/database.php';
 
-// بدء الجلسة
-session_start();
-
-// التحقق من الصلاحيات
-$isAdmin = true;
-
-if (!$isAdmin) {
-    http_response_code(403);
-    die('غير مسموح بالوصول');
-}
+// التحقق من المصادقة
+require_once __DIR__ . '/../auth-check.php';
 
 // جلب معرف الإجابة
 $answerId = isset($_GET['id']) ? (int)$_GET['id'] : 0;

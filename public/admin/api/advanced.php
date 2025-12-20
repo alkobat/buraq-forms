@@ -15,12 +15,14 @@ use BuraqForms\Core\Services\CommentService;
 use BuraqForms\Core\Services\BackupService;
 use BuraqForms\Core\Services\SystemSettingsService;
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // التحقق من تسجيل الدخول
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'غير مصرح']);
+    echo json_encode(['success' => false, 'message' => 'الرجاء تسجيل الدخول']);
     exit;
 }
 

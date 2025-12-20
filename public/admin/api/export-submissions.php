@@ -7,16 +7,8 @@ require_once __DIR__ . '/../../../config/database.php';
 require_once __DIR__ . '/../../../src/Core/Services/FormService.php';
 require_once __DIR__ . '/../../../src/Core/Services/FormFieldService.php';
 
-// بدء الجلسة
-session_start();
-
-// التحقق من الصلاحيات
-$isAdmin = true;
-
-if (!$isAdmin) {
-    http_response_code(403);
-    die('غير مسموح بالوصول');
-}
+// التحقق من المصادقة
+require_once __DIR__ . '/../../auth-check.php';
 
 // إنشاء الخدمات
 $formService = new BuraqForms\Core\Services\FormService($pdo);
