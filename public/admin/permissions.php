@@ -8,21 +8,15 @@ use BuraqForms\Core\Services\PermissionService;
 use BuraqForms\Core\Services\AuditService;
 use BuraqForms\Core\Services\DepartmentService;
 
-// إعداد الجلسة والتحقق من الصلاحية
-session_start();
+// التحقق من المصادقة
+require_once __DIR__ . '/../auth-check.php';
 
 $database = Database::getConnection();
 $permissionService = new PermissionService($database);
 $auditService = new AuditService($database);
 $departmentService = new DepartmentService($database);
 
-// التحقق من تسجيل الدخول
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
-    header('Location: login.php');
-    exit;
-}
-
-$adminId = $_SESSION['admin_id'] ?? 0;
+$adminId = $_SESSION['user']['id'] ?? 0;
 
 // التحقق من الصلاحية (يتطلب صلاحية إدارة المستخدمين)
 if (!$permissionService->hasPermission($adminId, 'users.manage')) {

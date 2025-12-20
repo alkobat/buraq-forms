@@ -13,12 +13,14 @@ use BuraqForms\Core\Services\DraftService;
 use BuraqForms\Core\Services\PermissionService;
 use BuraqForms\Core\Services\AuditService;
 
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // التحقق من تسجيل الدخول
-if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'غير مصرح']);
+    echo json_encode(['success' => false, 'message' => 'الرجاء تسجيل الدخول']);
     exit;
 }
 
@@ -27,7 +29,7 @@ $draftService = new DraftService($database);
 $permissionService = new PermissionService($database);
 $auditService = new AuditService($database);
 
-$adminId = $_SESSION['admin_id'] ?? 0;
+$adminId = $_SESSION['user']['id'] ?? 0;
 
 try {
     $action = $_GET['action'] ?? '';
