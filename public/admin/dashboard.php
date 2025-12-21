@@ -2,20 +2,34 @@
 
 declare(strict_types=1);
 
+// Include required files
+require_once __DIR__ . '/../../src/helpers.php';
+require_once __DIR__ . '/../../src/Core/Auth.php';
+
+// Require authentication - redirect to login if not logged in
+require_auth();
+
+// Validate session security
+if (!validate_session()) {
+    header('Location: ../login.php');
+    exit;
+}
+
 // تضمين الإعدادات
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../src/Core/Services/DepartmentService.php';
 require_once __DIR__ . '/../../src/Core/Services/FormService.php';
 
-// بدء الجلسة
-session_start();
+// Get current user
+$current_user = current_user();
 
-// التحقق من الصلاحيات (مؤقتاً)
-$isAdmin = true; // يمكن تغييره حسب نظام المصادقة
+// Get user role for conditional access
+$user_role = $current_user['role'] ?? 'editor';
 
-if (!$isAdmin) {
+// التحقق من الدور للوصول للداشبورد (جميع الأدوار مسموحة للداشبورد)
+if (!can_access('dashboard')) {
     http_response_code(403);
-    die('غير مسموح بالوصول');
+    die('غير مسموح بالوصول لهذه الصفحة');
 }
 
 // إنشاء الخدمات

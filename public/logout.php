@@ -3,21 +3,22 @@ declare(strict_types=1);
 
 session_start();
 
-// إنهاء الجلسة
-$_SESSION = [];
+// Include required files
+require_once __DIR__ . '/../../src/helpers.php';
+require_once __DIR__ . '/../../src/Core/Auth.php';
 
-// حذف session cookie
-if (ini_get("session.use_cookies")) {
-    $params = session_get_cookie_params();
-    setcookie(session_name(), '', time() - 42000,
-        $params["path"], $params["domain"],
-        $params["secure"], $params["httponly"]
-    );
+use BuraqForms\Core\Auth;
+
+// Validate session before logout
+if (!validate_session()) {
+    // Session is invalid, redirect to login
+    header('Location: ../login.php');
+    exit;
 }
 
-// تدمير الجلسة
-session_destroy();
+// Logout user securely using Auth class
+Auth::logout_user();
 
-// إعادة التوجيه للصفحة الرئيسية
-header('Location: home.php');
+// After logout, redirect to login page with success message
+header('Location: ../login.php?message=logout_success');
 exit;
