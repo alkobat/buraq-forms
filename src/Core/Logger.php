@@ -5,20 +5,16 @@ declare(strict_types=1);
 namespace BuraqForms\Core;
 
 /**
- * Minimal file-based logger.
+ * Hybrid logger that supports both static and instance usage.
  */
 class Logger
 {
+    private static string $defaultLogFile = __DIR__ . '/../../storage/logs/app.log';
     private string $logFile;
 
     public function __construct(?string $logFile = null)
     {
-        $this->logFile = $logFile ?? dirname(__DIR__, 2) . '/storage/logs/app.log';
-
-        $dir = dirname($this->logFile);
-        if (!is_dir($dir)) {
-            @mkdir($dir, 0755, true);
-        }
+        $this->logFile = $logFile ?? self::$defaultLogFile;
     }
 
     /**
@@ -26,7 +22,7 @@ class Logger
      */
     public function info(string $message, array $context = []): void
     {
-        $this->write('INFO', $message, $context);
+        self::writeToFile($this->logFile, 'INFO', $message, $context);
     }
 
     /**
@@ -34,7 +30,7 @@ class Logger
      */
     public function warning(string $message, array $context = []): void
     {
-        $this->write('WARN', $message, $context);
+        self::writeToFile($this->logFile, 'WARN', $message, $context);
     }
 
     /**
@@ -42,14 +38,61 @@ class Logger
      */
     public function error(string $message, array $context = []): void
     {
-        $this->write('ERROR', $message, $context);
+        self::writeToFile($this->logFile, 'ERROR', $message, $context);
     }
 
     /**
      * @param array<string, mixed> $context
      */
-    private function write(string $level, string $message, array $context): void
+    public function debug(string $message, array $context = []): void
     {
+        self::writeToFile($this->logFile, 'DEBUG', $message, $context);
+    }
+
+    // Static methods for Auth.php compatibility
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    public static function info(string $message, array $context = []): void
+    {
+        self::writeToFile(self::$defaultLogFile, 'INFO', $message, $context);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    public static function warning(string $message, array $context = []): void
+    {
+        self::writeToFile(self::$defaultLogFile, 'WARN', $message, $context);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    public static function error(string $message, array $context = []): void
+    {
+        self::writeToFile(self::$defaultLogFile, 'ERROR', $message, $context);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    public static function debug(string $message, array $context = []): void
+    {
+        self::writeToFile(self::$defaultLogFile, 'DEBUG', $message, $context);
+    }
+
+    /**
+     * @param array<string, mixed> $context
+     */
+    private static function writeToFile(string $logFile, string $level, string $message, array $context): void
+    {
+        $logDir = dirname($logFile);
+        if (!is_dir($logDir)) {
+            @mkdir($logDir, 0755, true);
+        }
+
         $timestamp = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d H:i:s');
         $line = sprintf('[%s] %s: %s', $timestamp, $level, $message);
 
@@ -58,6 +101,6 @@ class Logger
         }
 
         $line .= PHP_EOL;
-        @file_put_contents($this->logFile, $line, FILE_APPEND | LOCK_EX);
+        @file_put_contents($logFile, $line, FILE_APPEND | LOCK_EX);
     }
 }
