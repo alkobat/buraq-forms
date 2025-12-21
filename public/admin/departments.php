@@ -26,9 +26,9 @@ $current_user = current_user();
 $user_role = $current_user['role'] ?? 'editor';
 
 // التحقق من الدور للوصول لصفحة الإدارات (manager+)
-if (!in_array($user_role, ['admin', 'manager'])) {
+if (!can_access('departments')) {
     http_response_code(403);
-    die('غير مسموح بالوصول لهذه الصفحة - مطلوب دور manager أو admin');
+    die('غير مسموح بالوصول لهذه الصفحة - مطلوب صلاحية إدارة الإدارات');
 }
 
 // إنشاء خدمة إدارة الإدارات

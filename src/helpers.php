@@ -1067,3 +1067,266 @@ function ees_get_client_ip(): string
     
     return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
 }
+
+/**
+ * ========================================
+ * Authentication and Authorization Helpers
+ * ========================================
+ */
+
+/**
+ * Check if user is logged in
+ */
+function is_logged_in(): bool
+{
+    require_once __DIR__ . '/Core/Auth.php';
+    return \BuraqForms\Core\Auth::is_logged_in();
+}
+
+/**
+ * Get current logged-in user data
+ */
+function current_user(): ?array
+{
+    require_once __DIR__ . '/Core/Auth.php';
+    return \BuraqForms\Core\Auth::current_user();
+}
+
+/**
+ * Require authentication - redirect to login if not logged in
+ */
+function require_auth(): void
+{
+    require_once __DIR__ . '/Core/Auth.php';
+    \BuraqForms\Core\Auth::require_auth();
+}
+
+/**
+ * Require specific permission
+ */
+function require_permission(string $permission, ?int $departmentId = null): void
+{
+    require_once __DIR__ . '/Core/Auth.php';
+    \BuraqForms\Core\Auth::require_permission($permission, $departmentId);
+}
+
+/**
+ * Check if current user has specific permission
+ */
+function has_permission(string $permission, ?int $departmentId = null): bool
+{
+    require_once __DIR__ . '/Core/Auth.php';
+    return \BuraqForms\Core\Auth::has_permission($permission, $departmentId);
+}
+
+/**
+ * Require specific role
+ */
+function require_role(string $role): void
+{
+    require_once __DIR__ . '/Core/Auth.php';
+    \BuraqForms\Core\Auth::require_role($role);
+}
+
+/**
+ * Check if current user has any of the specified roles
+ */
+function has_any_role(array $roles): bool
+{
+    require_once __DIR__ . '/Core/Auth.php';
+    return \BuraqForms\Core\Auth::has_any_role($roles);
+}
+
+/**
+ * Get current user permissions
+ */
+function current_user_permissions(): array
+{
+    require_once __DIR__ . '/Core/Auth.php';
+    return \BuraqForms\Core\Auth::current_user_permissions();
+}
+
+/**
+ * Get current user roles
+ */
+function current_user_roles(): array
+{
+    require_once __DIR__ . '/Core/Auth.php';
+    return \BuraqForms\Core\Auth::current_user_roles();
+}
+
+/**
+ * Login user
+ */
+function login_user(string $email, string $password, bool $remember_me = false): array
+{
+    require_once __DIR__ . '/Core/Auth.php';
+    return \BuraqForms\Core\Auth::login_user($email, $password, $remember_me);
+}
+
+/**
+ * Logout user
+ */
+function logout_user(): void
+{
+    require_once __DIR__ . '/Core/Auth.php';
+    \BuraqForms\Core\Auth::logout_user();
+}
+
+/**
+ * Generate CSRF token
+ */
+function generate_csrf_token(): string
+{
+    require_once __DIR__ . '/Core/Auth.php';
+    return \BuraqForms\Core\Auth::generate_csrf_token();
+}
+
+/**
+ * Verify CSRF token
+ */
+function verify_csrf_token(?string $token): bool
+{
+    require_once __DIR__ . '/Core/Auth.php';
+    return \BuraqForms\Core\Auth::verify_csrf_token($token);
+}
+
+/**
+ * Validate session security
+ */
+function validate_session(): bool
+{
+    require_once __DIR__ . '/Core/Auth.php';
+    return \BuraqForms\Core\Auth::validate_session();
+}
+
+/**
+ * ========================================
+ * Role and Permission Management Helpers
+ * ========================================
+ */
+
+/**
+ * Get all available roles
+ */
+function get_available_roles(): array
+{
+    try {
+        require_once __DIR__ . '/Core/Services/RolePermissionService.php';
+        $roleService = new \BuraqForms\Core\Services\RolePermissionService();
+        return $roleService->getAllRoles();
+    } catch (Exception $e) {
+        error_log("Error getting available roles: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Check if user can access a module
+ */
+function can_access(string $module): bool
+{
+    $module_permissions = [
+        'dashboard' => ['dashboard.view'],
+        'forms' => ['forms.view', 'forms.create', 'forms.edit'],
+        'submissions' => ['submissions.view', 'submissions.edit'],
+        'departments' => ['departments.view', 'departments.manage'],
+        'reports' => ['reports.view'],
+        'settings' => ['settings.manage'],
+        'permissions' => ['permissions.manage']
+    ];
+
+    if (!isset($module_permissions[$module])) {
+        return false;
+    }
+
+    $required_permissions = $module_permissions[$module];
+    foreach ($required_permissions as $permission) {
+        if (has_permission($permission)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Get role hierarchy level
+ */
+function get_role_level(string $role): int
+{
+    $role_hierarchy = [
+        'admin' => 5,
+        'manager' => 4,
+        'editor' => 3,
+        'viewer' => 2,
+        'user' => 1
+    ];
+
+    return $role_hierarchy[$role] ?? 0;
+}
+
+/**
+ * Check if user has higher or equal role level
+ */
+function has_role_level(string $required_role): bool
+{
+    $user = current_user();
+    if (!$user) {
+        return false;
+    }
+
+    $user_level = get_role_level($user['role'] ?? 'user');
+    $required_level = get_role_level($required_role);
+
+    return $user_level >= $required_level;
+}
+
+/**
+ * Get user department-specific permissions
+ */
+function get_department_permissions(int $departmentId): array
+{
+    $user = current_user();
+    if (!$user) {
+        return [];
+    }
+
+    try {
+        require_once __DIR__ . '/Core/Services/RolePermissionService.php';
+        $roleService = new \BuraqForms\Core\Services\RolePermissionService();
+        $permissions = [];
+        
+        $all_permissions = $roleService->getUserPermissions($user['id']);
+        foreach ($all_permissions as $permission) {
+            if ($roleService->hasPermission($user['id'], $permission, $departmentId)) {
+                $permissions[] = $permission;
+            }
+        }
+        
+        return $permissions;
+    } catch (Exception $e) {
+        error_log("Error getting department permissions: " . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Check if user can perform action on specific department
+ */
+function can_perform_on_department(string $action, int $departmentId): bool
+{
+    $action_permissions = [
+        'view' => 'departments.view',
+        'manage' => 'departments.manage',
+        'edit' => 'departments.edit'
+    ];
+
+    $required_permission = $action_permissions[$action] ?? null;
+    if (!$required_permission) {
+        return false;
+    }
+
+    return has_permission($required_permission, $departmentId);
+}
+
