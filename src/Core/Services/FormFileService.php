@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace BuraqForms\Core\Services;
 
+// Load Logger class directly to avoid autoloading issues
+require_once __DIR__ . '/../Logger.php';
+
 use BuraqForms\Core\Cache\FileCache;
 use BuraqForms\Core\Exceptions\FileStorageException;
-use BuraqForms\Core\Logger;
 use finfo;
 use PDO;
 
