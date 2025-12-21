@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace BuraqForms\Core;
 
-use BuraqForms\Core\Logger;
+// Load Logger class directly to avoid autoloading issues
+require_once __DIR__ . '/Logger.php';
+
 use BuraqForms\Core\Services\RolePermissionService;
 
 /**
