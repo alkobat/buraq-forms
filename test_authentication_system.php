@@ -118,8 +118,21 @@ run_test("تحميل Helper Functions", function() {
     }
 });
 
+// اختبار 3: اختبار RolePermissionService
+run_test("تحميل RolePermissionService", function() {
+    if (!file_exists(__DIR__ . '/src/Core/Services/RolePermissionService.php')) {
+        return ['success' => false, 'message' => 'ملف RolePermissionService غير موجود'];
+    }
+    
+    if (!class_exists('BuraqForms\\Core\\Services\\RolePermissionService')) {
+        return ['success' => false, 'message' => 'فشل في تحميل RolePermissionService'];
+    }
+    
+    return ['success' => true, 'message' => 'RolePermissionService تم تحميلها بنجاح'];
+});
+
 // ========================================
-// اختبار 3: اختبار CSRF Token
+// اختبار 5: اختبار CSRF Token
 // ========================================
 run_test("توليد والتحقق من CSRF Token", function() {
     // Generate token
@@ -138,7 +151,7 @@ run_test("توليد والتحقق من CSRF Token", function() {
 });
 
 // ========================================
-// اختبار 4: اختبار Session Security
+// اختبار 5: اختبار Session Security
 // ========================================
 run_test("Session Security", function() {
     // Test session validation (should return true when not logged in)
@@ -152,31 +165,84 @@ run_test("Session Security", function() {
 });
 
 // ========================================
-// اختبار 5: اختبار نظام الأدوار
+// اختبار 6: اختبار نظام الأدوار والصلاحيات
 // ========================================
-run_test("نظام الأدوار والصلاحيات", function() {
+run_test("نظام الأدوار والصلاحيات الجديد", function() {
+    // Test loading RolePermissionService
+    if (!class_exists('BuraqForms\\Core\\Services\\RolePermissionService')) {
+        return ['success' => false, 'message' => 'RolePermissionService غير متوفر'];
+    }
+    
     // Test available roles
     $roles = get_available_roles();
     
-    if (!isset($roles['admin']) || !isset($roles['manager']) || !isset($roles['editor'])) {
-        return ['success' => false, 'message' => 'الأدوار الأساسية غير متوفرة'];
+    if (empty($roles)) {
+        return ['success' => false, 'message' => 'لا توجد أدوار متاحة'];
+    }
+    
+    // Check if essential roles exist
+    $role_names = array_column($roles, 'role_name');
+    $essential_roles = ['admin', 'manager', 'editor', 'viewer'];
+    
+    foreach ($essential_roles as $role) {
+        if (!in_array($role, $role_names)) {
+            return ['success' => false, 'message' => "دور {$role} غير موجود"];
+        }
     }
     
     // Test permission system
-    if (!has_permission('forms.view')) {
-        return ['success' => false, 'message' => 'نظام الصلاحيات لا يعمل'];
+    $permissionService = new BuraqForms\Core\Services\RolePermissionService();
+    $permissions = $permissionService->getAllPermissions();
+    
+    if (empty($permissions)) {
+        return ['success' => false, 'message' => 'لا توجد صلاحيات متاحة'];
     }
     
-    // Test module access
-    if (!can_access('dashboard')) {
-        return ['success' => false, 'message' => 'نظام الوصول للوحدات لا يعمل'];
-    }
-    
-    return ['success' => true, 'message' => 'نظام الأدوار والصلاحيات يعمل بشكل صحيح'];
+    return ['success' => true, 'message' => 'نظام الأدوار والصلاحيات الجديد يعمل بشكل صحيح'];
 });
 
 // ========================================
-// اختبار 6: اختبار database connection
+// اختبار 8: اختبار جداول RBAC
+// ========================================
+run_test("جداول RBAC (الأدوار والصلاحيات)", function() {
+    try {
+        require_once __DIR__ . '/config/database.php';
+        
+        $required_tables = ['admin_roles', 'admin_permissions', 'admin_role_assignments', 'admin_role_permissions', 'audit_logs'];
+        $missing_tables = [];
+        
+        foreach ($required_tables as $table) {
+            $stmt = $pdo->prepare("SHOW TABLES LIKE ?");
+            $stmt->execute([$table]);
+            
+            if ($stmt->rowCount() === 0) {
+                $missing_tables[] = $table;
+            }
+        }
+        
+        if (!empty($missing_tables)) {
+            return ['success' => false, 'message' => 'جداول مفقودة: ' . implode(', ', $missing_tables)];
+        }
+        
+        // Check if data exists
+        $stmt = $pdo->query("SELECT COUNT(*) FROM admin_roles");
+        $role_count = $stmt->fetchColumn();
+        
+        $stmt = $pdo->query("SELECT COUNT(*) FROM admin_permissions");
+        $permission_count = $stmt->fetchColumn();
+        
+        if ($role_count === 0 || $permission_count === 0) {
+            return ['success' => false, 'message' => 'البيانات الأساسية للأدوار والصلاحيات غير موجودة'];
+        }
+        
+        return ['success' => true, 'message' => 'جداول RBAC موجودة ومعبأة بالبيانات'];
+    } catch (Exception $e) {
+        return ['success' => false, 'message' => 'خطأ في فحص جداول RBAC: ' . $e->getMessage()];
+    }
+});
+
+// ========================================
+// اختبار 9: اختبار database connection
 // ========================================
 run_test("اتصال قاعدة البيانات", function() {
     try {

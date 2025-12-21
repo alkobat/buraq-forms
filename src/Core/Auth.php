@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace BuraqForms\Core;
 
 use BuraqForms\Core\Logger;
+use BuraqForms\Core\Services\RolePermissionService;
 
 /**
  * Authentication and Authorization Helper Class
@@ -14,6 +15,31 @@ use BuraqForms\Core\Logger;
  */
 class Auth
 {
+    /**
+     * Security configuration
+     */
+    private static array $securityConfig = [];
+
+    /**
+     * Load security configuration
+     */
+    private static function loadSecurityConfig(): void
+    {
+        if (empty(self::$securityConfig)) {
+            $configPath = __DIR__ . '/../../config/security.php';
+            if (file_exists($configPath)) {
+                self::$securityConfig = require $configPath;
+            } else {
+                // Default configuration if file doesn't exist
+                self::$securityConfig = [
+                    'session' => self::SESSION_CONFIG,
+                    'csrf' => ['token_lifetime' => self::CSRF_TOKEN_LIFETIME],
+                    'login' => ['max_attempts' => self::MAX_LOGIN_ATTEMPTS, 'lockout_time' => self::LOGIN_LOCKOUT_TIME]
+                ];
+            }
+        }
+    }
+
     /**
      * Session configuration
      */
@@ -74,6 +100,111 @@ class Auth
         if (!self::is_logged_in()) {
             self::redirect_to_login();
         }
+    }
+
+    /**
+     * Require specific permission - redirect to login or show error if insufficient permissions
+     */
+    public static function require_permission(string $permission, ?int $departmentId = null): void
+    {
+        self::require_auth();
+
+        $user = self::current_user();
+        if (!$user) {
+            self::redirect_to_login();
+        }
+
+        $rolePermissionService = new RolePermissionService();
+        $hasPermission = $departmentId ? 
+            $rolePermissionService->hasPermission($user['id'], $permission, $departmentId) :
+            $rolePermissionService->hasGlobalPermission($user['id'], $permission);
+
+        if (!$hasPermission) {
+            Logger::warning('Access denied - insufficient permission', [
+                'user_id' => $user['id'],
+                'user_role' => $user['role'] ?? 'unknown',
+                'required_permission' => $permission,
+                'department_id' => $departmentId,
+                'page' => $_SERVER['REQUEST_URI'] ?? 'unknown'
+            ]);
+
+            http_response_code(403);
+            die('Access Denied: Insufficient permissions for this page.');
+        }
+    }
+
+    /**
+     * Check if current user has specific permission
+     */
+    public static function has_permission(string $permission, ?int $departmentId = null): bool
+    {
+        if (!self::is_logged_in()) {
+            return false;
+        }
+
+        $user = self::current_user();
+        if (!$user) {
+            return false;
+        }
+
+        $rolePermissionService = new RolePermissionService();
+        return $departmentId ? 
+            $rolePermissionService->hasPermission($user['id'], $permission, $departmentId) :
+            $rolePermissionService->hasGlobalPermission($user['id'], $permission);
+    }
+
+    /**
+     * Check if current user has any of the specified roles
+     */
+    public static function has_any_role(array $roles): bool
+    {
+        if (!self::is_logged_in()) {
+            return false;
+        }
+
+        $user = self::current_user();
+        if (!$user) {
+            return false;
+        }
+
+        $rolePermissionService = new RolePermissionService();
+        return $rolePermissionService->hasAnyRole($user['id'], $roles);
+    }
+
+    /**
+     * Get current user permissions
+     */
+    public static function current_user_permissions(): array
+    {
+        if (!self::is_logged_in()) {
+            return [];
+        }
+
+        $user = self::current_user();
+        if (!$user) {
+            return [];
+        }
+
+        $rolePermissionService = new RolePermissionService();
+        return $rolePermissionService->getUserPermissions($user['id']);
+    }
+
+    /**
+     * Get current user roles
+     */
+    public static function current_user_roles(): array
+    {
+        if (!self::is_logged_in()) {
+            return [];
+        }
+
+        $user = self::current_user();
+        if (!$user) {
+            return [];
+        }
+
+        $rolePermissionService = new RolePermissionService();
+        return $rolePermissionService->getUserRoles($user['id']);
     }
 
     /**
@@ -226,11 +357,17 @@ class Auth
      */
     public static function generate_csrf_token(): string
     {
+        self::loadSecurityConfig();
+        
+        $csrf_config = self::$securityConfig['csrf'] ?? ['token_lifetime' => self::CSRF_TOKEN_LIFETIME];
+        $token_lifetime = $csrf_config['token_lifetime'] ?? self::CSRF_TOKEN_LIFETIME;
+
         if (!isset($_SESSION['csrf_token']) || 
             !isset($_SESSION['csrf_token_time']) || 
-            (time() - $_SESSION['csrf_token_time']) > self::CSRF_TOKEN_LIFETIME) {
+            (time() - $_SESSION['csrf_token_time']) > $token_lifetime) {
             
-            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+            $token_length = $csrf_config['token_length'] ?? 32;
+            $_SESSION['csrf_token'] = bin2hex(random_bytes($token_length));
             $_SESSION['csrf_token_time'] = time();
         }
 
@@ -246,9 +383,13 @@ class Auth
             return false;
         }
 
+        self::loadSecurityConfig();
+        $csrf_config = self::$securityConfig['csrf'] ?? ['token_lifetime' => self::CSRF_TOKEN_LIFETIME];
+        $token_lifetime = $csrf_config['token_lifetime'] ?? self::CSRF_TOKEN_LIFETIME;
+
         // Check token expiration
         if (!isset($_SESSION['csrf_token_time']) || 
-            (time() - $_SESSION['csrf_token_time']) > self::CSRF_TOKEN_LIFETIME) {
+            (time() - $_SESSION['csrf_token_time']) > $token_lifetime) {
             return false;
         }
 
