@@ -3,12 +3,15 @@ declare(strict_types=1);
 
 session_start();
 
-// إذا كان مسجل دخول، أعد التوجيه للداشبورد
-if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header('Location: admin/dashboard.php');
-    exit;
-}
+// Load constants
+require_once CONFIG_PATH . '/constants.php';
 
-// إذا كان غير مسجل دخول، أعد التوجيه لصفحة تسجيل الدخول
-header('Location: home.php');
-exit;
+// Load router
+require_once __DIR__ . '/router.php';
+
+// Load routes
+$routes = require_once CONFIG_PATH . '/routes.php';
+
+// Dispatch
+$router = new Router($routes);
+$router->dispatch($_SERVER['REQUEST_URI']);

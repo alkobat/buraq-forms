@@ -2,8 +2,8 @@
 declare(strict_types=1);
 
 // Include required files
-require_once __DIR__ . '/../../src/helpers.php';
-require_once __DIR__ . '/../../src/Core/Auth.php';
+require_once SRC_PATH . '/helpers.php';
+require_once SRC_PATH . '/Core/Auth.php';
 
 // Require admin authentication only
 require_role('admin');

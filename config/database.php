@@ -15,6 +15,8 @@ use PDOException;
  * - getDatabaseConfig(): array
  */
 
+require_once __DIR__ . '/constants.php';
+
 // ---------------------------------------------------------------------
 // .env loader (minimal, no dependencies)
 // ---------------------------------------------------------------------
@@ -64,7 +66,7 @@ function loadEnvFile(string $path): array
     return $vars;
 }
 
-loadEnvFile(dirname(__DIR__) . '/.env');
+loadEnvFile(BASE_PATH . '/.env');
 
 // ---------------------------------------------------------------------
 // Defaults (can be overridden by .env)

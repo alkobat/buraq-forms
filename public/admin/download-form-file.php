@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 // تضمين الإعدادات
-require_once __DIR__ . '/../../config/database.php';
+require_once CONFIG_PATH . '/database.php';
 
 // بدء الجلسة
 session_start();
