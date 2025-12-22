@@ -3,11 +3,13 @@ declare(strict_types=1);
 
 session_start();
 
-// توجيه بسيط فقط - بدون require_once
+// الحصول على المسار الأساسي
+$base_url = '/buraq-forms/public/';
+
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header('Location: admin/dashboard.php');
+    header('Location: ' . $base_url . 'admin/dashboard.php');
     exit;
 }
 
-header('Location: home.php');
+header('Location: ' . $base_url . 'home.php');
 exit;

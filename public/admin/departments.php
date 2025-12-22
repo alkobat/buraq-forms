@@ -15,7 +15,7 @@ require_auth();
 
 // Validate session security
 if (!validate_session()) {
-    header('Location: ../login.php');
+    header("Location: /buraq-forms/public/login.php");
     exit;
 }
 
