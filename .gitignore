@@ -88,6 +88,8 @@ Thumbs.db
 /config/
 !/config/database.php
 !/config/database.php.example
+!/config/constants.php
+!/config/routes.php
 
 # Composer files that might contain sensitive info
 composer.json.bak

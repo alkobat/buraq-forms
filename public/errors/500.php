@@ -1,4 +1,7 @@
 <?php
+if (!defined('CONFIG_PATH')) {
+    require_once __DIR__ . '/../../config/constants.php';
+}
 // صفحة خطأ 500
 $pageTitle = 'خطأ في الخادم';
 ?>
