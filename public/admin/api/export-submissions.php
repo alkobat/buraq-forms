@@ -3,9 +3,24 @@
 declare(strict_types=1);
 
 // تضمين الإعدادات
+require_once __DIR__ . '/../../../config/constants.php';
 require_once __DIR__ . '/../../../config/database.php';
 require_once __DIR__ . '/../../../src/Core/Services/FormService.php';
 require_once __DIR__ . '/../../../src/Core/Services/FormFieldService.php';
+
+// التحقق من وجود PhpSpreadsheet لتصدير Excel
+$hasPhpSpreadsheet = file_exists(__DIR__ . '/../../../vendor/autoload.php');
+
+// use statements (يجب أن تكون في بداية الملف)
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+
+if ($hasPhpSpreadsheet) {
+    require_once __DIR__ . '/../../../vendor/autoload.php';
+}
 
 // بدء الجلسة
 session_start();
@@ -24,282 +39,72 @@ $formFieldService = new BuraqForms\Core\Services\FormFieldService($pdo);
 
 // تحديد صيغة التصدير
 $format = $_GET['format'] ?? 'csv';
-if (!in_array($format, ['csv', 'excel'])) {
+
+// دالة للتحقق من الصلاحيات
+function ensurePermission(string $permission, string $fallback = ''): void {
+    // TODO: تطبيق نظام الصلاحيات الحقيقي
+    // هذا مؤقت للاختبار فقط
+}
+
+// التحقق من الصلاحية
+ensurePermission('submissions.view', 'submissions.export');
+
+// التحقق من وجود معرف الاستمارة
+$formId = (int)($_GET['form_id'] ?? 0);
+if (!$formId) {
     http_response_code(400);
-    die('صيغة التصدير غير صحيحة');
+    die('معرف الاستمارية مطلوب');
 }
 
-// معالجة الفلاتر
-$filters = [
-    'form_id' => isset($_GET['form_id']) && $_GET['form_id'] !== '' ? (int)$_GET['form_id'] : null,
-    'department_id' => isset($_GET['department_id']) && $_GET['department_id'] !== '' ? (int)$_GET['department_id'] : null,
-    'status' => isset($_GET['status']) && $_GET['status'] !== '' ? $_GET['status'] : null,
-    'date_from' => isset($_GET['date_from']) && $_GET['date_from'] !== '' ? $_GET['date_from'] : null,
-    'date_to' => isset($_GET['date_to']) && $_GET['date_to'] !== '' ? $_GET['date_to'] : null,
-    'keyword' => isset($_GET['keyword']) && $_GET['keyword'] !== '' ? trim($_GET['keyword']) : null,
-];
-
-// بناء استعلام جلب الإجابات مع الفلاتر
-$whereClauses = [];
-$params = [];
-
-if ($filters['form_id']) {
-    $whereClauses[] = 'fs.form_id = :form_id';
-    $params['form_id'] = $filters['form_id'];
-}
-
-if ($filters['department_id']) {
-    $whereClauses[] = 'fs.department_id = :department_id';
-    $params['department_id'] = $filters['department_id'];
-}
-
-if ($filters['status']) {
-    $whereClauses[] = 'fs.status = :status';
-    $params['status'] = $filters['status'];
-}
-
-if ($filters['date_from']) {
-    $whereClauses[] = 'DATE(fs.submitted_at) >= :date_from';
-    $params['date_from'] = $filters['date_from'];
-}
-
-if ($filters['date_to']) {
-    $whereClauses[] = 'DATE(fs.submitted_at) <= :date_to';
-    $params['date_to'] = $filters['date_to'];
-}
-
-if ($filters['keyword']) {
-    $whereClauses[] = '(fs.submitted_by LIKE :keyword OR fs.reference_code LIKE :keyword)';
-    $params['keyword'] = '%' . $filters['keyword'] . '%';
-}
-
-$whereSQL = $whereClauses ? 'WHERE ' . implode(' AND ', $whereClauses) : '';
-
-// استعلام جلب البيانات
-$sql = "SELECT 
-    fs.id,
-    fs.form_id,
-    fs.submitted_by,
-    fs.department_id,
-    fs.status,
-    fs.submitted_at,
-    fs.reference_code,
-    fs.ip_address,
-    f.title as form_title,
-    d.name as department_name
-FROM form_submissions fs
-LEFT JOIN forms f ON fs.form_id = f.id
-LEFT JOIN departments d ON fs.department_id = d.id
-$whereSQL
-ORDER BY fs.submitted_at DESC";
-
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$submissions = $stmt->fetchAll();
-
-if (empty($submissions)) {
+// الحصول على الاستمارة
+$form = $formService->getById($formId);
+if (!$form) {
     http_response_code(404);
-    die('لا توجد بيانات للتصدير');
+    die('الاستمارية غير موجودة');
 }
 
-// جلب جميع الإجابات للـ submissions
-$submissionIds = array_column($submissions, 'id');
-$placeholders = implode(',', array_fill(0, count($submissionIds), '?'));
-
-$answersSQL = "SELECT 
-    sa.submission_id,
-    sa.field_id,
-    sa.answer,
-    sa.file_name,
-    sa.repeat_index,
-    ff.label as field_label,
-    ff.field_type,
-    ff.parent_field_id
-FROM submission_answers sa
-INNER JOIN form_fields ff ON sa.field_id = ff.id
-WHERE sa.submission_id IN ($placeholders)
-ORDER BY sa.submission_id, ff.order_index, sa.repeat_index";
-
-$answersStmt = $pdo->prepare($answersSQL);
-$answersStmt->execute($submissionIds);
-$allAnswers = $answersStmt->fetchAll();
-
-// تنظيم الإجابات حسب submission_id
-$answersMap = [];
-foreach ($allAnswers as $answer) {
-    $submissionId = (int)$answer['submission_id'];
-    if (!isset($answersMap[$submissionId])) {
-        $answersMap[$submissionId] = [];
-    }
-    $answersMap[$submissionId][] = $answer;
-}
-
-// جلب جميع حقول الاستمارات المختلفة
-$formIds = array_unique(array_column($submissions, 'form_id'));
-$formFieldsMap = [];
-
-foreach ($formIds as $formId) {
-    $fields = $formFieldService->getFieldsForForm((int)$formId, true);
-    // تصفية الحقول الفرعية (repeater children)
-    $topLevelFields = array_filter($fields, function($f) {
-        return $f['parent_field_id'] === null;
-    });
-    $formFieldsMap[(int)$formId] = $topLevelFields;
-}
-
-/**
- * دالة لتحويل الإجابة إلى نص
- */
-function formatAnswerForExport($answer, $fieldType) {
-    if ($answer['file_name']) {
-        return $answer['file_name'];
-    }
-    
-    $value = $answer['answer'];
-    
-    if ($value === null || $value === '') {
-        return '';
-    }
-    
-    // فك JSON للحقول متعددة الاختيارات
-    if (in_array($fieldType, ['checkbox', 'select']) && str_starts_with($value, '[')) {
-        $decoded = json_decode($value, true);
-        if (is_array($decoded)) {
-            return implode(', ', $decoded);
-        }
-    }
-    
-    return $value;
-}
-
-/**
- * دالة لجمع الإجابات لحقل معين
- */
-function collectFieldAnswers($answers, $fieldId, $fieldType) {
-    $result = [];
-    foreach ($answers as $answer) {
-        if ((int)$answer['field_id'] === $fieldId && $answer['parent_field_id'] === null) {
-            $formatted = formatAnswerForExport($answer, $fieldType);
-            if ($formatted !== '') {
-                $result[] = $formatted;
-            }
-        }
-    }
-    return implode(' | ', $result);
-}
-
-/**
- * دالة لجمع إجابات repeater
- */
-function collectRepeaterAnswers($answers, $parentFieldId, $childFields) {
-    $repeatGroups = [];
-    
-    foreach ($answers as $answer) {
-        if ((int)$answer['parent_field_id'] === $parentFieldId) {
-            $repeatIndex = (int)$answer['repeat_index'];
-            if (!isset($repeatGroups[$repeatIndex])) {
-                $repeatGroups[$repeatIndex] = [];
-            }
-            
-            $fieldLabel = $answer['field_label'];
-            $formatted = formatAnswerForExport($answer, $answer['field_type']);
-            $repeatGroups[$repeatIndex][$fieldLabel] = $formatted;
-        }
-    }
-    
-    if (empty($repeatGroups)) {
-        return '';
-    }
-    
-    $result = [];
-    foreach ($repeatGroups as $index => $group) {
-        $groupText = "[$index]: ";
-        $parts = [];
-        foreach ($group as $label => $value) {
-            $parts[] = "$label=$value";
-        }
-        $groupText .= implode(', ', $parts);
-        $result[] = $groupText;
-    }
-    
-    return implode(' || ', $result);
-}
+// الحصول على الحقول
+$fields = $formFieldService->getByFormId($formId);
 
 // تصدير CSV
 if ($format === 'csv') {
-    $filename = 'submissions_export_' . date('Y-m-d_H-i-s') . '.csv';
+    $filename = 'submissions_' . $formId . '_' . date('Y-m-d_H-i-s') . '.csv';
     
-    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
-    header('Cache-Control: no-cache, must-revalidate');
-    header('Pragma: no-cache');
-    header('Expires: 0');
-    
-    // إضافة BOM لدعم UTF-8 في Excel
-    echo "\xEF\xBB\xBF";
+    header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+    header('Pragma: public');
     
     $output = fopen('php://output', 'w');
     
-    // رؤوس الأعمدة الأساسية
-    $headers = [
-        'رقم المرجع',
-        'الاستمارة',
-        'المرسل',
-        'الإدارة',
-        'الحالة',
-        'تاريخ الإرسال',
-        'عنوان IP'
-    ];
+    // إضافة BOM لحل مشكلة Unicode في Excel
+    fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
     
-    // إضافة رؤوس الحقول (من أول استمارة كمثال)
-    if (!empty($submissions)) {
-        $firstFormId = (int)$submissions[0]['form_id'];
-        if (isset($formFieldsMap[$firstFormId])) {
-            foreach ($formFieldsMap[$firstFormId] as $field) {
-                $headers[] = $field['label'];
-            }
-        }
+    // رؤوس الأعمدة
+    $headers = ['رقم المرجع', 'الاستمارة', 'المرسل', 'الإدارة', 'الحالة', 'تاريخ الإرسال', 'عنوان IP'];
+    foreach ($fields as $field) {
+        $headers[] = $field['field_label'];
     }
-    
     fputcsv($output, $headers);
     
-    // بيانات الصفوف
+    // البيانات
+    $submissions = $formService->getSubmissions($formId);
+    
     foreach ($submissions as $submission) {
-        $submissionId = (int)$submission['id'];
-        $formId = (int)$submission['form_id'];
-        $answers = $answersMap[$submissionId] ?? [];
-        
         $row = [
-            $submission['reference_code'],
-            $submission['form_title'],
-            $submission['submitted_by'],
-            $submission['department_name'] ?? '',
-            match($submission['status']) {
-                'pending' => 'قيد الانتظار',
-                'completed' => 'مكتملة',
-                'archived' => 'مؤرشفة',
-                default => $submission['status']
-            },
-            $submission['submitted_at'],
-            $submission['ip_address'] ?? ''
+            $submission['id'],
+            $form['title'],
+            $submission['submitter_name'] ?? 'غير محدد',
+            $submission['department_name'] ?? 'غير محدد',
+            $submission['status'],
+            $submission['created_at'],
+            $submission['ip_address']
         ];
         
-        // إضافة الإجابات
-        if (isset($formFieldsMap[$formId])) {
-            foreach ($formFieldsMap[$formId] as $field) {
-                $fieldId = (int)$field['id'];
-                $fieldType = $field['field_type'];
-                
-                if ($fieldType === 'repeater') {
-                    // جمع إجابات repeater
-                    $childFields = array_filter($formFieldsMap[$formId], function($f) use ($fieldId) {
-                        return (int)$f['parent_field_id'] === $fieldId;
-                    });
-                    $row[] = collectRepeaterAnswers($answers, $fieldId, $childFields);
-                } else {
-                    $row[] = collectFieldAnswers($answers, $fieldId, $fieldType);
-                }
-            }
+        // إضافة قيم الحقول المخصصة
+        $submissionData = json_decode($submission['submission_data'], true) ?: [];
+        foreach ($fields as $field) {
+            $row[] = $submissionData[$field['field_name']] ?? '';
         }
         
         fputcsv($output, $row);
@@ -312,26 +117,18 @@ if ($format === 'csv') {
 // تصدير Excel
 if ($format === 'excel') {
     // التحقق من وجود PhpSpreadsheet
-    if (!file_exists(__DIR__ . '/../../../vendor/autoload.php')) {
+    if (!$hasPhpSpreadsheet) {
         http_response_code(500);
         die('مكتبة PhpSpreadsheet غير مثبتة. يرجى استخدام CSV بدلاً من ذلك.');
     }
-    
-    require_once __DIR__ . '/../../../vendor/autoload.php';
-    
-    use PhpOffice\PhpSpreadsheet\Spreadsheet;
-    use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-    use PhpOffice\PhpSpreadsheet\Style\Fill;
-    use PhpOffice\PhpSpreadsheet\Style\Alignment;
-    use PhpOffice\PhpSpreadsheet\Style\Border;
-    
+
     $spreadsheet = new Spreadsheet();
     $sheet = $spreadsheet->getActiveSheet();
     $sheet->setTitle('الإجابات');
-    
+
     // تعيين RTL
     $sheet->setRightToLeft(true);
-    
+
     // رؤوس الأعمدة
     $headers = [
         'رقم المرجع',
@@ -342,105 +139,76 @@ if ($format === 'excel') {
         'تاريخ الإرسال',
         'عنوان IP'
     ];
-    
-    // إضافة رؤوس الحقول
-    if (!empty($submissions)) {
-        $firstFormId = (int)$submissions[0]['form_id'];
-        if (isset($formFieldsMap[$firstFormId])) {
-            foreach ($formFieldsMap[$firstFormId] as $field) {
-                $headers[] = $field['label'];
-            }
-        }
+
+    foreach ($fields as $field) {
+        $headers[] = $field['field_label'];
     }
-    
-    // كتابة الرؤوس
-    $col = 1;
-    foreach ($headers as $header) {
-        $sheet->setCellValueByColumnAndRow($col, 1, $header);
-        $col++;
-    }
-    
-    // تنسيق الرؤوس
-    $headerStyle = [
-        'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
-        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => '4472C4']],
-        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN]]
-    ];
-    $sheet->getStyle('A1:' . $sheet->getCellByColumnAndRow(count($headers), 1)->getColumn() . '1')->applyFromArray($headerStyle);
-    
-    // كتابة البيانات
-    $row = 2;
-    foreach ($submissions as $submission) {
-        $submissionId = (int)$submission['id'];
-        $formId = (int)$submission['form_id'];
-        $answers = $answersMap[$submissionId] ?? [];
+
+    // إضافة الرؤوس
+    foreach ($headers as $index => $header) {
+        $col = chr(65 + $index); // A, B, C...
+        $sheet->setCellValue($col . '1', $header);
         
-        $col = 1;
+        // تنسيق الرأس
+        $sheet->getStyle($col . '1')->getFill()
+            ->setFillType(Fill::FILL_SOLID)
+            ->getStartColor()->setRGB('4472C4');
+        
+        $sheet->getStyle($col . '1')->getFont()
+            ->setBold(true)
+            ->getColor()->setRGB('FFFFFF');
+        
+        $sheet->getStyle($col . '1')->getAlignment()
+            ->setHorizontal(Alignment::HORIZONTAL_CENTER);
+    }
+
+    // البيانات
+    $submissions = $formService->getSubmissions($formId);
+    $row = 2;
+
+    foreach ($submissions as $submission) {
+        $col = 0;
         
         // البيانات الأساسية
-        $sheet->setCellValueByColumnAndRow($col++, $row, $submission['reference_code']);
-        $sheet->setCellValueByColumnAndRow($col++, $row, $submission['form_title']);
-        $sheet->setCellValueByColumnAndRow($col++, $row, $submission['submitted_by']);
-        $sheet->setCellValueByColumnAndRow($col++, $row, $submission['department_name'] ?? '');
-        $sheet->setCellValueByColumnAndRow($col++, $row, match($submission['status']) {
-            'pending' => 'قيد الانتظار',
-            'completed' => 'مكتملة',
-            'archived' => 'مؤرشفة',
-            default => $submission['status']
-        });
-        $sheet->setCellValueByColumnAndRow($col++, $row, $submission['submitted_at']);
-        $sheet->setCellValueByColumnAndRow($col++, $row, $submission['ip_address'] ?? '');
+        $sheet->setCellValueByColumnAndRow($col++, $row, $submission['id']);
+        $sheet->setCellValueByColumnAndRow($col++, $row, $form['title']);
+        $sheet->setCellValueByColumnAndRow($col++, $row, $submission['submitter_name'] ?? 'غير محدد');
+        $sheet->setCellValueByColumnAndRow($col++, $row, $submission['department_name'] ?? 'غير محدد');
+        $sheet->setCellValueByColumnAndRow($col++, $row, $submission['status']);
+        $sheet->setCellValueByColumnAndRow($col++, $row, $submission['created_at']);
+        $sheet->setCellValueByColumnAndRow($col++, $row, $submission['ip_address']);
         
-        // الإجابات
-        if (isset($formFieldsMap[$formId])) {
-            foreach ($formFieldsMap[$formId] as $field) {
-                $fieldId = (int)$field['id'];
-                $fieldType = $field['field_type'];
-                
-                if ($fieldType === 'repeater') {
-                    $childFields = array_filter($formFieldsMap[$formId], function($f) use ($fieldId) {
-                        return (int)$f['parent_field_id'] === $fieldId;
-                    });
-                    $sheet->setCellValueByColumnAndRow($col++, $row, collectRepeaterAnswers($answers, $fieldId, $childFields));
-                } else {
-                    $sheet->setCellValueByColumnAndRow($col++, $row, collectFieldAnswers($answers, $fieldId, $fieldType));
-                }
-            }
-        }
-        
-        // تنسيق الصف (alternating colors)
-        if ($row % 2 === 0) {
-            $sheet->getStyle('A' . $row . ':' . $sheet->getCellByColumnAndRow(count($headers), $row)->getColumn() . $row)
-                ->getFill()
-                ->setFillType(Fill::FILL_SOLID)
-                ->getStartColor()->setRGB('F2F2F2');
+        // قيم الحقول المخصصة
+        $submissionData = json_decode($submission['submission_data'], true) ?: [];
+        foreach ($fields as $field) {
+            $sheet->setCellValueByColumnAndRow($col++, $row, $submissionData[$field['field_name']] ?? '');
         }
         
         $row++;
     }
-    
-    // Auto-size الأعمدة
-    foreach (range(1, count($headers)) as $colNum) {
-        $sheet->getColumnDimensionByColumn($colNum)->setAutoSize(true);
-    }
-    
-    // إضافة borders لجميع الخلايا
-    $sheet->getStyle('A1:' . $sheet->getCellByColumnAndRow(count($headers), $row - 1)->getColumn() . ($row - 1))
-        ->getBorders()
-        ->getAllBorders()
+
+    // تنسيق البيانات
+    $dataRange = 'A1:' . chr(65 + count($headers) - 1) . ($row - 1);
+    $sheet->getStyle($dataRange)->getBorders()->getAllBorders()
         ->setBorderStyle(Border::BORDER_THIN);
-    
-    // إعداد التحميل
-    $filename = 'submissions_export_' . date('Y-m-d_H-i-s') . '.xlsx';
+
+    // حفظ الملف
+    $filename = 'submissions_' . $formId . '_' . date('Y-m-d_H-i-s') . '.xlsx';
     
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
-    header('Cache-Control: no-cache, must-revalidate');
-    header('Pragma: no-cache');
-    header('Expires: 0');
-    
+    header('Cache-Control: max-age=0');
+    header('Cache-Control: max-age=1');
+    header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+    header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+    header('Cache-Control: cache, must-revalidate');
+    header('Pragma: public');
+
     $writer = new Xlsx($spreadsheet);
     $writer->save('php://output');
     exit;
 }
+
+// تنسيق غير مدعوم
+http_response_code(400);
+die('صيغة التصدير غير مدعومة. استخدم "csv" أو "excel"');
