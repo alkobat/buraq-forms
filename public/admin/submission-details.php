@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 // تضمين الإعدادات
-require_once __DIR__ . '/../../config/database.php';
-require_once __DIR__ . '/../../src/Core/Services/FormService.php';
-require_once __DIR__ . '/../../src/Core/Services/FormFieldService.php';
-require_once __DIR__ . '/../../src/Core/Services/FormSubmissionService.php';
+require_once CONFIG_PATH . '/database.php';
+require_once SRC_PATH . '/Core/Services/FormService.php';
+require_once SRC_PATH . '/Core/Services/FormFieldService.php';
+require_once SRC_PATH . '/Core/Services/FormSubmissionService.php';
 
 // بدء الجلسة
 session_start();

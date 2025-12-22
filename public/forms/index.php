@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../config/database.php';
-require_once __DIR__ . '/../../src/Core/Services/FormService.php';
-require_once __DIR__ . '/../../src/Core/Services/DepartmentService.php';
+require_once CONFIG_PATH . '/database.php';
+require_once SRC_PATH . '/Core/Services/FormService.php';
+require_once SRC_PATH . '/Core/Services/DepartmentService.php';
 
 session_start();
 
