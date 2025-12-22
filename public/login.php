@@ -15,7 +15,7 @@ use BuraqForms\Core\Auth;
 
 // إذا كان مسجل دخول بالفعل، أعد التوجيه للداشبورد
 if (is_logged_in()) {
-    header('Location: admin/dashboard.php');
+    header('Location: /buraq-forms/public/admin/dashboard.php');
     exit;
 }
 
@@ -47,11 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if ($result['success']) {
                     // Get redirect URL if provided
-                    $redirect = $_GET['redirect'] ?? 'admin/dashboard.php';
+                    $redirect = $_GET['redirect'] ?? '/buraq-forms/public/admin/dashboard.php';
                     
                     // Validate redirect URL to prevent open redirect
                     if (!preg_match('/^[a-zA-Z0-9_\-\/\.?&=]*$/', $redirect)) {
-                        $redirect = 'admin/dashboard.php';
+                        $redirect = '/buraq-forms/public/admin/dashboard.php';
                     }
                     
                     header('Location: ' . $redirect);

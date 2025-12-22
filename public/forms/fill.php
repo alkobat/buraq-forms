@@ -20,7 +20,7 @@ if (empty($_SESSION['csrf_token'])) {
 
 $slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
 if (empty($slug)) {
-    header('Location: index.php');
+    header('Location: /buraq-forms/public/index.php');
     exit;
 }
 

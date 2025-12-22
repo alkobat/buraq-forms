@@ -7,7 +7,7 @@ session_start();
 $referenceCode = isset($_GET['ref']) ? trim($_GET['ref']) : '';
 
 if (empty($referenceCode)) {
-    header('Location: index.php');
+    header('Location: /buraq-forms/public/index.php');
     exit;
 }
 

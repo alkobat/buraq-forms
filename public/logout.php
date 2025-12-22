@@ -16,7 +16,7 @@ use BuraqForms\Core\Auth;
 // Validate session before logout
 if (!validate_session()) {
     // Session is invalid, redirect to login
-    header('Location: ../login.php');
+    header('Location: /buraq-forms/public/login.php');
     exit;
 }
 
@@ -24,5 +24,5 @@ if (!validate_session()) {
 Auth::logout_user();
 
 // After logout, redirect to login page with success message
-header('Location: ../login.php?message=logout_success');
+header('Location: /buraq-forms/public/login.php?message=logout_success');
 exit;

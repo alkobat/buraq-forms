@@ -1,12 +1,9 @@
 <?php
 
-if (!defined('CONFIG_PATH')) {
-    require_once __DIR__ . '/../config/constants.php';
-}
 // توجيه الصفحة الرئيسية
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header('Location: ' . APP_URL . '/admin/dashboard');
+    header('Location: /buraq-forms/public/admin/dashboard.php');
 } else {
-    header('Location: ' . APP_URL . '/home');
+    header('Location: /buraq-forms/public/home.php');
 }
 exit;
