@@ -1,7 +1,10 @@
 <?php
 declare(strict_types=1);
 
-require_once CONFIG_PATH . '/constants.php';
+if (!defined('CONFIG_PATH')) {
+    // Fallback if not loaded via index.php
+    require_once __DIR__ . '/../config/constants.php';
+}
 
 class Router
 {
