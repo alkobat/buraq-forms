@@ -3,13 +3,13 @@ declare(strict_types=1);
 
 session_start();
 
-// الحصول على المسار الأساسي
-$base_url = '/buraq-forms/public/';
-
+// بدلاً من header redirect، استخدم require
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header('Location: ' . $base_url . 'admin/dashboard.php');
+    // المستخدم مسجل دخول - حمل لوحة التحكم
+    require_once __DIR__ . '/admin/dashboard.php';
     exit;
 }
 
-header('Location: ' . $base_url . 'home.php');
+// المستخدم غير مسجل دخول - حمل صفحة البداية
+require_once __DIR__ . '/home.php';
 exit;
