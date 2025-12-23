@@ -2,23 +2,27 @@
 
 declare(strict_types=1);
 
+if (!defined('CONFIG_PATH')) {
+    require_once __DIR__ . '/../../config/constants.php';
+}
+
 // Include required files
-require_once SRC_PATH . '/helpers.php';
-require_once SRC_PATH . '/Core/Auth.php';
+require_once __DIR__ . '/../../src/helpers.php';
+require_once __DIR__ . '/../../src/Core/Auth.php';
 
 // Require authentication - redirect to login if not logged in
 require_auth();
 
 // Validate session security
 if (!validate_session()) {
-    header("Location: /buraq-forms/public/login.php")');
+    header("Location: /buraq-forms/public/login.php");
     exit;
 }
 
 // تضمين الإعدادات
-require_once CONFIG_PATH . '/database.php';
-require_once SRC_PATH . '/Core/Services/FormService.php';
-require_once SRC_PATH . '/Core/Services/FormFieldService.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../src/Core/Services/FormService.php';
+require_once __DIR__ . '/../../src/Core/Services/FormFieldService.php';
 
 // Get current user
 $current_user = current_user();
@@ -65,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $action = $_POST['action'] ?? '';
-        
+
         switch ($action) {
             case 'add_field':
                 $data = [
@@ -165,7 +169,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } catch (Exception $e) {
         $error = $e->getMessage();
     }
-    
+
     // إعادة تحميل الحقول بعد أي عملية
     $fields = $formFieldService->getFieldsForForm($formId, true);
 }
@@ -418,7 +422,7 @@ $fieldTypes = [
                 </div>
 
                 <!-- Alerts -->
-                <?php if ($error): ?>
+                <?php if ($error) : ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="fas fa-exclamation-triangle"></i>
                     <?= htmlspecialchars($error) ?>
@@ -426,7 +430,7 @@ $fieldTypes = [
                 </div>
                 <?php endif; ?>
 
-                <?php if ($success): ?>
+                <?php if ($success) : ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="fas fa-check-circle"></i>
                     <?= htmlspecialchars($success) ?>
@@ -444,7 +448,7 @@ $fieldTypes = [
                             </h5>
                             
                             <div class="field-types-grid">
-                                <?php foreach ($fieldTypes as $type => $config): ?>
+                                <?php foreach ($fieldTypes as $type => $config) : ?>
                                 <div class="field-type-btn" data-type="<?= $type ?>" onclick="selectFieldType('<?= $type ?>')">
                                     <div class="mb-2">
                                         <i class="<?= $config['icon'] ?> fa-lg"></i>
@@ -584,14 +588,14 @@ $fieldTypes = [
                             </div>
                             <div class="card-body">
                                 <div class="fields-container" id="fieldsContainer">
-                                    <?php if (empty($fields)): ?>
+                                    <?php if (empty($fields)) : ?>
                                     <div class="text-center text-muted py-5" id="emptyState">
                                         <i class="fas fa-plus-circle fa-3x mb-3"></i>
                                         <h5>لا توجد حقول بعد</h5>
                                         <p>اختر نوع الحقل من الجانب لإضافة حقل جديد</p>
                                     </div>
-                                    <?php else: ?>
-                                    <?php foreach ($fields as $index => $field): ?>
+                                    <?php else : ?>
+                                        <?php foreach ($fields as $index => $field) : ?>
                                     <div class="field-item" data-field-id="<?= $field['id'] ?>">
                                         <div class="field-controls">
                                             <button type="button" class="btn btn-sm btn-outline-primary me-1" 
@@ -611,14 +615,14 @@ $fieldTypes = [
                                         <div class="d-flex justify-content-between align-items-start">
                                             <div>
                                                 <h6 class="mb-1"><?= htmlspecialchars($field['label']) ?></h6>
-                                                <?php if ($field['placeholder']): ?>
+                                                <?php if ($field['placeholder']) : ?>
                                                 <small class="text-muted">
                                                     <i class="fas fa-info-circle"></i>
                                                     <?= htmlspecialchars($field['placeholder']) ?>
                                                 </small>
                                                 <?php endif; ?>
                                                 
-                                                <?php if ($field['helper_text']): ?>
+                                                <?php if ($field['helper_text']) : ?>
                                                 <div class="mt-1">
                                                     <small class="text-info">
                                                         <i class="fas fa-question-circle"></i>
@@ -629,7 +633,7 @@ $fieldTypes = [
                                             </div>
                                             
                                             <div class="text-end">
-                                                <?php if ($field['is_required']): ?>
+                                                <?php if ($field['is_required']) : ?>
                                                 <span class="badge bg-danger">مطلوب</span>
                                                 <?php endif; ?>
                                                 
@@ -639,20 +643,20 @@ $fieldTypes = [
                                             </div>
                                         </div>
                                         
-                                        <?php if (!empty($field['field_options'])): ?>
+                                            <?php if (!empty($field['field_options'])) : ?>
                                         <div class="mt-2">
                                             <small class="text-muted">
                                                 <i class="fas fa-list"></i>
                                                 خيارات: <?= count(json_decode($field['field_options'], true) ?: []) ?>
                                             </small>
                                         </div>
-                                        <?php endif; ?>
+                                            <?php endif; ?>
                                     </div>
-                                    <?php endforeach; ?>
+                                        <?php endforeach; ?>
                                     <?php endif; ?>
                                 </div>
                                 
-                                <?php if (!empty($fields)): ?>
+                                <?php if (!empty($fields)) : ?>
                                 <div class="mt-3 text-center">
                                     <form id="reorderForm" method="POST" style="display: inline;">
                                         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">

@@ -6,8 +6,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../config/constants.php';
 
 // Include required files
-require_once SRC_PATH . '/helpers.php';
-require_once SRC_PATH . '/Core/Auth.php';
+require_once __DIR__ . '/../../src/helpers.php';
+require_once __DIR__ . '/../../src/Core/Auth.php';
 
 // Require authentication - redirect to login if not logged in
 require_auth();
@@ -19,9 +19,9 @@ if (!validate_session()) {
 }
 
 // تضمين الإعدادات
-require_once CONFIG_PATH . '/database.php';
-require_once SRC_PATH . '/Core/Services/DepartmentService.php';
-require_once SRC_PATH . '/Core/Services/FormService.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../src/Core/Services/DepartmentService.php';
+require_once __DIR__ . '/../../src/Core/Services/FormService.php';
 
 // Get current user
 $current_user = current_user();
@@ -43,10 +43,10 @@ $formService = new BuraqForms\Core\Services\FormService($pdo);
 try {
     $totalDepartments = count($departmentService->list());
     $activeDepartments = count($departmentService->list(true));
-    
+
     $totalForms = count($formService->list());
     $activeForms = count($formService->list('active'));
-    
+
     // إحصائيات الإجابات
     $submissionsStatsStmt = $pdo->query('
         SELECT 
@@ -57,7 +57,7 @@ try {
         FROM form_submissions
     ');
     $submissionsStats = $submissionsStatsStmt->fetch(PDO::FETCH_ASSOC);
-    
+
     // إحصائيات الإجابات لكل استمارة
     $submissionsByFormStmt = $pdo->query('
         SELECT 
@@ -71,7 +71,7 @@ try {
         LIMIT 5
     ');
     $submissionsByForm = $submissionsByFormStmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // إحصائيات الإجابات لكل إدارة
     $submissionsByDeptStmt = $pdo->query('
         SELECT 
@@ -85,7 +85,7 @@ try {
         LIMIT 5
     ');
     $submissionsByDept = $submissionsByDeptStmt->fetchAll(PDO::FETCH_ASSOC);
-    
+
     // آخر الإجابات
     $recentSubmissionsStmt = $pdo->query('
         SELECT 
@@ -99,7 +99,6 @@ try {
         LIMIT 10
     ');
     $recentSubmissions = $recentSubmissionsStmt->fetchAll(PDO::FETCH_ASSOC);
-    
 } catch (Exception $e) {
     $error = $e->getMessage();
 }
@@ -328,13 +327,13 @@ try {
                                 </h5>
                             </div>
                             <div class="card-body">
-                                <?php if (empty($recentSubmissions)): ?>
+                                <?php if (empty($recentSubmissions)) : ?>
                                     <div class="text-center text-muted py-4">
                                         <i class="fas fa-inbox fa-3x mb-3"></i>
                                         <p>لا توجد إجابات بعد</p>
                                     </div>
-                                <?php else: ?>
-                                    <?php foreach ($recentSubmissions as $submission): ?>
+                                <?php else : ?>
+                                    <?php foreach ($recentSubmissions as $submission) : ?>
                                     <div class="d-flex align-items-center mb-3 pb-3 border-bottom">
                                         <div class="me-3">
                                             <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center" 
@@ -451,13 +450,13 @@ try {
                                 </h5>
                             </div>
                             <div class="card-body">
-                                <?php if (empty($submissionsByForm)): ?>
+                                <?php if (empty($submissionsByForm)) : ?>
                                     <div class="text-center text-muted py-4">
                                         <i class="fas fa-chart-bar fa-3x mb-3"></i>
                                         <p>لا توجد بيانات</p>
                                     </div>
-                                <?php else: ?>
-                                    <?php foreach ($submissionsByForm as $item): ?>
+                                <?php else : ?>
+                                    <?php foreach ($submissionsByForm as $item) : ?>
                                         <div class="mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span class="small"><?= htmlspecialchars($item['title']) ?></span>
@@ -487,13 +486,13 @@ try {
                                 </h5>
                             </div>
                             <div class="card-body">
-                                <?php if (empty($submissionsByDept)): ?>
+                                <?php if (empty($submissionsByDept)) : ?>
                                     <div class="text-center text-muted py-4">
                                         <i class="fas fa-building fa-3x mb-3"></i>
                                         <p>لا توجد بيانات</p>
                                     </div>
-                                <?php else: ?>
-                                    <?php foreach ($submissionsByDept as $item): ?>
+                                <?php else : ?>
+                                    <?php foreach ($submissionsByDept as $item) : ?>
                                         <div class="mb-3">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
                                                 <span class="small"><?= htmlspecialchars($item['name']) ?></span>

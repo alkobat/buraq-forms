@@ -1,9 +1,14 @@
 <?php
+
 declare(strict_types=1);
 
+if (!defined('CONFIG_PATH')) {
+    require_once __DIR__ . '/../../config/constants.php';
+}
+
 // Include required files
-require_once SRC_PATH . '/helpers.php';
-require_once SRC_PATH . '/Core/Auth.php';
+require_once __DIR__ . '/../../src/helpers.php';
+require_once __DIR__ . '/../../src/Core/Auth.php';
 
 // Require admin authentication only
 require_role('admin');
@@ -44,13 +49,13 @@ $messageType = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $action = $_POST['action'] ?? '';
-        
+
         switch ($action) {
             case 'assign_role':
                 $targetAdminId = (int) ($_POST['admin_id'] ?? 0);
                 $roleId = (int) ($_POST['role_id'] ?? 0);
                 $departmentId = !empty($_POST['department_id']) ? (int) $_POST['department_id'] : null;
-                
+
                 if ($targetAdminId > 0 && $roleId > 0) {
                     $result = $permissionService->assignRole($targetAdminId, $roleId, $departmentId);
                     if ($result) {
@@ -67,12 +72,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 break;
-                
+
             case 'remove_role':
                 $targetAdminId = (int) ($_POST['admin_id'] ?? 0);
                 $roleId = (int) ($_POST['role_id'] ?? 0);
                 $departmentId = !empty($_POST['department_id']) ? (int) $_POST['department_id'] : null;
-                
+
                 if ($targetAdminId > 0 && $roleId > 0) {
                     $result = $permissionService->removeRole($targetAdminId, $roleId, $departmentId);
                     if ($result) {
@@ -89,11 +94,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 break;
-                
+
             case 'create_role':
                 $roleName = $_POST['role_name'] ?? '';
                 $roleDescription = $_POST['role_description'] ?? '';
-                
+
                 if (!empty($roleName)) {
                     $roleId = $permissionService->createRole($roleName, $roleDescription, false);
                     if ($roleId) {
@@ -109,11 +114,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 break;
-                
+
             case 'set_role_permissions':
                 $roleId = (int) ($_POST['role_id'] ?? 0);
                 $permissionIds = $_POST['permission_ids'] ?? [];
-                
+
                 if ($roleId > 0) {
                     $result = $permissionService->setRolePermissions($roleId, array_map('intval', $permissionIds));
                     if ($result) {
@@ -379,7 +384,7 @@ $stats = [
             <!-- Content -->
             <div class="col-lg-9">
                 <div class="content">
-                    <?php if ($message): ?>
+                    <?php if ($message) : ?>
                         <div class="alert alert-<?= $messageType === 'error' ? 'danger' : 'success' ?> alert-dismissible fade show" role="alert">
                             <i class="fas fa-<?= $messageType === 'error' ? 'exclamation-triangle' : 'check-circle' ?>"></i>
                             <?= htmlspecialchars($message) ?>
@@ -436,7 +441,7 @@ $stats = [
                             </h3>
                             
                             <div class="row">
-                                <?php foreach ($admins as $admin): ?>
+                                <?php foreach ($admins as $admin) : ?>
                                     <div class="col-md-6">
                                         <div class="admin-card">
                                             <div class="d-flex justify-content-between align-items-start mb-3">
@@ -458,13 +463,13 @@ $stats = [
                                             <!-- الأدوار -->
                                             <div class="mb-3">
                                                 <h6><i class="fas fa-user-tag"></i> الأدوار:</h6>
-                                                <?php if (empty($admin['roles'])): ?>
+                                                <?php if (empty($admin['roles'])) : ?>
                                                     <p class="text-muted">لا توجد أدوار محددة</p>
-                                                <?php else: ?>
-                                                    <?php foreach ($admin['roles'] as $role): ?>
+                                                <?php else : ?>
+                                                    <?php foreach ($admin['roles'] as $role) : ?>
                                                         <span class="role-badge">
                                                             <?= htmlspecialchars($role['role_name']) ?>
-                                                            <?php if ($role['department_id']): ?>
+                                                            <?php if ($role['department_id']) : ?>
                                                                 <small>(<?= htmlspecialchars($role['department_name'] ?? 'إدارة محددة') ?>)</small>
                                                             <?php endif; ?>
                                                         </span>
@@ -497,18 +502,18 @@ $stats = [
                             </h3>
                             
                             <div class="row">
-                                <?php foreach ($allRoles as $role): ?>
+                                <?php foreach ($allRoles as $role) : ?>
                                     <div class="col-md-6">
                                         <div class="admin-card">
                                             <div class="d-flex justify-content-between align-items-start mb-3">
                                                 <div>
                                                     <h5 class="mb-1">
                                                         <?= htmlspecialchars($role['role_name']) ?>
-                                                        <?php if ($role['is_system_role']): ?>
+                                                        <?php if ($role['is_system_role']) : ?>
                                                             <span class="badge bg-primary">افتراضي</span>
                                                         <?php endif; ?>
                                                     </h5>
-                                                    <?php if ($role['role_description']): ?>
+                                                    <?php if ($role['role_description']) : ?>
                                                         <p class="text-muted mb-0"><?= htmlspecialchars($role['role_description']) ?></p>
                                                     <?php endif; ?>
                                                 </div>
@@ -521,11 +526,11 @@ $stats = [
                                             <!-- الصلاحيات -->
                                             <div>
                                                 <h6><i class="fas fa-key"></i> الصلاحيات:</h6>
-                                                <?php if (empty($role['permissions'])): ?>
+                                                <?php if (empty($role['permissions'])) : ?>
                                                     <p class="text-muted">لا توجد صلاحيات محددة</p>
-                                                <?php else: ?>
+                                                <?php else : ?>
                                                     <div class="d-flex flex-wrap">
-                                                        <?php foreach ($role['permissions'] as $permission): ?>
+                                                        <?php foreach ($role['permissions'] as $permission) : ?>
                                                             <span class="badge bg-light text-dark m-1"><?= htmlspecialchars($permission) ?></span>
                                                         <?php endforeach; ?>
                                                     </div>
@@ -544,17 +549,17 @@ $stats = [
                                 الصلاحيات المتاحة
                             </h3>
                             
-                            <?php foreach ($allPermissions as $group => $permissions): ?>
+                            <?php foreach ($allPermissions as $group => $permissions) : ?>
                                 <div class="permission-group">
                                     <div class="permission-group-header">
                                         <i class="fas fa-folder"></i>
                                         <?= htmlspecialchars(ucfirst($group)) ?>
                                     </div>
-                                    <?php foreach ($permissions as $permission): ?>
+                                    <?php foreach ($permissions as $permission) : ?>
                                         <div class="permission-item">
                                             <div>
                                                 <strong><?= htmlspecialchars($permission['name']) ?></strong>
-                                                <?php if ($permission['description']): ?>
+                                                <?php if ($permission['description']) : ?>
                                                     <br><small class="text-muted"><?= htmlspecialchars($permission['description']) ?></small>
                                                 <?php endif; ?>
                                             </div>
@@ -617,7 +622,7 @@ $stats = [
                             <label class="form-label">الدور</label>
                             <select class="form-select" name="role_id" required>
                                 <option value="">-- اختر الدور --</option>
-                                <?php foreach ($allRoles as $role): ?>
+                                <?php foreach ($allRoles as $role) : ?>
                                     <option value="<?= $role['id'] ?>"><?= htmlspecialchars($role['role_name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
@@ -627,7 +632,7 @@ $stats = [
                             <label class="form-label">الإدارة (اختياري)</label>
                             <select class="form-select" name="department_id">
                                 <option value="">جميع الإدارات</option>
-                                <?php foreach ($departments as $dept): ?>
+                                <?php foreach ($departments as $dept) : ?>
                                     <option value="<?= $dept['id'] ?>"><?= htmlspecialchars($dept['name']) ?></option>
                                 <?php endforeach; ?>
                             </select>
@@ -656,13 +661,13 @@ $stats = [
                         <input type="hidden" name="action" value="set_role_permissions">
                         <input type="hidden" name="role_id" id="permissions_role_id">
                         
-                        <?php foreach ($allPermissions as $group => $permissions): ?>
+                        <?php foreach ($allPermissions as $group => $permissions) : ?>
                             <div class="permission-group">
                                 <div class="permission-group-header">
                                     <i class="fas fa-folder"></i>
                                     <?= htmlspecialchars(ucfirst($group)) ?>
                                 </div>
-                                <?php foreach ($permissions as $permission): ?>
+                                <?php foreach ($permissions as $permission) : ?>
                                     <div class="permission-item">
                                         <div class="form-check">
                                             <input class="form-check-input permission-checkbox" 
@@ -672,7 +677,7 @@ $stats = [
                                                    id="perm_<?= $permission['id'] ?>">
                                             <label class="form-check-label" for="perm_<?= $permission['id'] ?>">
                                                 <strong><?= htmlspecialchars($permission['name']) ?></strong>
-                                                <?php if ($permission['description']): ?>
+                                                <?php if ($permission['description']) : ?>
                                                     <br><small class="text-muted"><?= htmlspecialchars($permission['description']) ?></small>
                                                 <?php endif; ?>
                                             </label>

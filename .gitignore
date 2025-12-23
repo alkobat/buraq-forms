@@ -86,6 +86,7 @@ Thumbs.db
 
 # Database configuration (keep database.php but ignore others)
 /config/
+!/config/
 !/config/database.php
 !/config/database.php.example
 !/config/constants.php

@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 if (!defined('CONFIG_PATH')) {
@@ -8,8 +9,8 @@ if (!defined('CONFIG_PATH')) {
 session_start();
 
 // Include required files
-require_once SRC_PATH . '/helpers.php';
-require_once SRC_PATH . '/Core/Auth.php';
+require_once __DIR__ . '/../src/helpers.php';
+require_once __DIR__ . '/../src/Core/Auth.php';
 
 use BuraqForms\Core\Auth;
 

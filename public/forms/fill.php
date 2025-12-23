@@ -2,12 +2,16 @@
 
 declare(strict_types=1);
 
+if (!defined('CONFIG_PATH')) {
+    require_once __DIR__ . '/../../config/constants.php';
+}
+
 // تضمين الإعدادات
 require_once __DIR__ . '/../../config/database.php';
-require_once SRC_PATH . '/helpers.php';
-require_once SRC_PATH . '/Core/Services/FormService.php';
-require_once SRC_PATH . '/Core/Services/FormFieldService.php';
-require_once SRC_PATH . '/Core/Services/DepartmentService.php';
+require_once __DIR__ . '/../../src/helpers.php';
+require_once __DIR__ . '/../../src/Core/Services/FormService.php';
+require_once __DIR__ . '/../../src/Core/Services/FormFieldService.php';
+require_once __DIR__ . '/../../src/Core/Services/DepartmentService.php';
 
 session_start();
 
@@ -27,19 +31,19 @@ $departmentService = new BuraqForms\Core\Services\DepartmentService($pdo);
 
 try {
     $form = $formService->getBySlug($slug);
-    
+
     if ($form['status'] !== 'active') {
         throw new Exception('هذه الاستمارة غير نشطة حالياً');
     }
-    
+
     $fieldDefinitions = $fieldService->getFieldDefinitionsForRendering((int)$form['id']);
     $departments = $departmentService->list(true);
-    
 } catch (Exception $e) {
     $error = $e->getMessage();
 }
 
-function renderField(array $field, int $repeatIndex = 0, string $parentKey = ''): string {
+function renderField(array $field, int $repeatIndex = 0, string $parentKey = ''): string
+{
     $fieldKey = $field['field_key'];
     if ($parentKey !== '') {
         $fieldId = 'field_' . $parentKey . '_' . $repeatIndex . '_' . $fieldKey;
@@ -50,12 +54,12 @@ function renderField(array $field, int $repeatIndex = 0, string $parentKey = '')
     }
     $required = $field['is_required'] ? 'required' : '';
     $requiredClass = $field['is_required'] ? 'required' : '';
-    
+
     $html = '<div class="mb-4">';
     $html .= '<label for="' . htmlspecialchars($fieldId) . '" class="form-label ' . $requiredClass . '">';
     $html .= htmlspecialchars($field['label']);
     $html .= '</label>';
-    
+
     switch ($field['field_type']) {
         case 'text':
         case 'email':
@@ -70,7 +74,7 @@ function renderField(array $field, int $repeatIndex = 0, string $parentKey = '')
             $html .= 'name="' . htmlspecialchars($fieldName) . '" ';
             $html .= 'placeholder="' . $placeholder . '" ';
             $html .= $required . ' ';
-            
+
             if (isset($field['validation_rules'])) {
                 if (isset($field['validation_rules']['min'])) {
                     $html .= 'min="' . htmlspecialchars((string)$field['validation_rules']['min']) . '" ';
@@ -85,10 +89,10 @@ function renderField(array $field, int $repeatIndex = 0, string $parentKey = '')
                     $html .= 'maxlength="' . htmlspecialchars((string)$field['validation_rules']['maxlength']) . '" ';
                 }
             }
-            
+
             $html .= '>';
             break;
-            
+
         case 'textarea':
             $placeholder = !empty($field['placeholder']) ? htmlspecialchars($field['placeholder']) : '';
             $html .= '<textarea ';
@@ -98,7 +102,7 @@ function renderField(array $field, int $repeatIndex = 0, string $parentKey = '')
             $html .= 'placeholder="' . $placeholder . '" ';
             $html .= 'rows="5" ';
             $html .= $required . ' ';
-            
+
             if (isset($field['validation_rules'])) {
                 if (isset($field['validation_rules']['minlength'])) {
                     $html .= 'minlength="' . htmlspecialchars((string)$field['validation_rules']['minlength']) . '" ';
@@ -107,10 +111,10 @@ function renderField(array $field, int $repeatIndex = 0, string $parentKey = '')
                     $html .= 'maxlength="' . htmlspecialchars((string)$field['validation_rules']['maxlength']) . '" ';
                 }
             }
-            
+
             $html .= '></textarea>';
             break;
-            
+
         case 'select':
             $html .= '<select ';
             $html .= 'class="form-select" ';
@@ -118,7 +122,7 @@ function renderField(array $field, int $repeatIndex = 0, string $parentKey = '')
             $html .= 'name="' . htmlspecialchars($fieldName) . '" ';
             $html .= $required . '>';
             $html .= '<option value="">-- اختر --</option>';
-            
+
             if (!empty($field['options'])) {
                 foreach ($field['options'] as $option) {
                     $html .= '<option value="' . htmlspecialchars($option['value']) . '">';
@@ -126,10 +130,10 @@ function renderField(array $field, int $repeatIndex = 0, string $parentKey = '')
                     $html .= '</option>';
                 }
             }
-            
+
             $html .= '</select>';
             break;
-            
+
         case 'radio':
             if (!empty($field['options'])) {
                 foreach ($field['options'] as $idx => $option) {
@@ -147,7 +151,7 @@ function renderField(array $field, int $repeatIndex = 0, string $parentKey = '')
                 }
             }
             break;
-            
+
         case 'checkbox':
             if (!empty($field['options'])) {
                 foreach ($field['options'] as $idx => $option) {
@@ -165,7 +169,7 @@ function renderField(array $field, int $repeatIndex = 0, string $parentKey = '')
                 }
             }
             break;
-            
+
         case 'file':
             $html .= '<div class="file-upload-container" onclick="document.getElementById(\'' . htmlspecialchars($fieldId) . '\').click();">';
             $html .= '<i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>';
@@ -179,27 +183,28 @@ function renderField(array $field, int $repeatIndex = 0, string $parentKey = '')
             $html .= '</div>';
             break;
     }
-    
+
     if (!empty($field['helper_text'])) {
         $html .= '<div class="form-text">' . htmlspecialchars($field['helper_text']) . '</div>';
     }
-    
+
     $html .= '<div class="invalid-feedback"></div>';
     $html .= '</div>';
-    
+
     return $html;
 }
 
-function renderRepeater(array $field): string {
+function renderRepeater(array $field): string
+{
     $html = '<div class="repeater-container mb-4" data-repeater-key="' . htmlspecialchars($field['field_key']) . '">';
     $html .= '<label class="form-label' . ($field['is_required'] ? ' required' : '') . '">';
     $html .= htmlspecialchars($field['label']);
     $html .= '</label>';
-    
+
     if (!empty($field['helper_text'])) {
         $html .= '<div class="form-text mb-3">' . htmlspecialchars($field['helper_text']) . '</div>';
     }
-    
+
     $html .= '<div class="repeater-group">';
     $html .= '<div class="repeater-group-header">';
     $html .= '<span class="repeater-group-title">المجموعة 1</span>';
@@ -207,21 +212,21 @@ function renderRepeater(array $field): string {
     $html .= '<i class="fas fa-times"></i> حذف';
     $html .= '</button>';
     $html .= '</div>';
-    
+
     if (!empty($field['children'])) {
         foreach ($field['children'] as $child) {
             $html .= renderField($child, 0, $field['field_key']);
         }
     }
-    
+
     $html .= '</div>';
-    
+
     $html .= '<button type="button" class="btn-add-group mt-3">';
     $html .= '<i class="fas fa-plus"></i> إضافة مجموعة جديدة';
     $html .= '</button>';
-    
+
     $html .= '</div>';
-    
+
     return $html;
 }
 
@@ -257,7 +262,7 @@ function renderRepeater(array $field): string {
         </div>
     </header>
 
-    <?php if (isset($error)): ?>
+    <?php if (isset($error)) : ?>
         <div class="container mt-4">
             <div class="alert alert-danger">
                 <i class="fas fa-exclamation-circle"></i>
@@ -270,7 +275,7 @@ function renderRepeater(array $field): string {
                 </a>
             </div>
         </div>
-    <?php else: ?>
+    <?php else : ?>
         <!-- Progress Bar -->
         <div class="progress-container">
             <div class="container">
@@ -291,7 +296,7 @@ function renderRepeater(array $field): string {
         </div>
 
         <div class="container mt-4">
-            <?php if (!empty($form['description'])): ?>
+            <?php if (!empty($form['description'])) : ?>
                 <div class="alert alert-info fade-in">
                     <i class="fas fa-info-circle"></i>
                     <?= nl2br(htmlspecialchars($form['description'])) ?>
@@ -328,12 +333,12 @@ function renderRepeater(array $field): string {
                             <div class="invalid-feedback"></div>
                         </div>
 
-                        <?php if ((int)$form['show_department_field'] === 1): ?>
+                        <?php if ((int)$form['show_department_field'] === 1) : ?>
                             <div class="mb-4">
                                 <label for="department_id" class="form-label required">الإدارة</label>
                                 <select class="form-select" id="department_id" name="department_id" required>
                                     <option value="">-- اختر الإدارة --</option>
-                                    <?php foreach ($departments as $dept): ?>
+                                    <?php foreach ($departments as $dept) : ?>
                                         <option value="<?= (int)$dept['id'] ?>">
                                             <?= htmlspecialchars($dept['name']) ?>
                                         </option>
@@ -346,10 +351,10 @@ function renderRepeater(array $field): string {
                         <hr class="my-4">
 
                         <!-- Dynamic Fields -->
-                        <?php foreach ($fieldDefinitions as $field): ?>
-                            <?php if ($field['field_type'] === 'repeater'): ?>
+                        <?php foreach ($fieldDefinitions as $field) : ?>
+                            <?php if ($field['field_type'] === 'repeater') : ?>
                                 <?= renderRepeater($field) ?>
-                            <?php else: ?>
+                            <?php else : ?>
                                 <?= renderField($field) ?>
                             <?php endif; ?>
                         <?php endforeach; ?>
