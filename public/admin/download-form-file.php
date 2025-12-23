@@ -2,12 +2,8 @@
 
 declare(strict_types=1);
 
-if (!defined('CONFIG_PATH')) {
-    require_once __DIR__ . '/../../config/constants.php';
-}
-
 // تضمين الإعدادات
-require_once CONFIG_PATH . '/database.php';
+require_once __DIR__ . '/../../config/database.php';
 
 // بدء الجلسة
 session_start();

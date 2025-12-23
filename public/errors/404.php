@@ -1,7 +1,4 @@
 <?php
-if (!defined('CONFIG_PATH')) {
-    require_once __DIR__ . '/../../config/constants.php';
-}
 // صفحة خطأ 404
 $pageTitle = 'الصفحة غير موجودة';
 ?>
