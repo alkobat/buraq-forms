@@ -2,9 +2,13 @@
 
 declare(strict_types=1);
 
+if (!defined('CONFIG_PATH')) {
+    require_once __DIR__ . '/../../config/constants.php';
+}
+
 // Include required files
-require_once SRC_PATH . '/helpers.php';
-require_once SRC_PATH . '/Core/Auth.php';
+require_once __DIR__ . '/../../src/helpers.php';
+require_once __DIR__ . '/../../src/Core/Auth.php';
 
 // Require authentication - redirect to login if not logged in
 require_auth();
@@ -16,8 +20,8 @@ if (!validate_session()) {
 }
 
 // تضمين الإعدادات
-require_once CONFIG_PATH . '/database.php';
-require_once SRC_PATH . '/Core/Services/DepartmentService.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../src/Core/Services/DepartmentService.php';
 
 // Get current user
 $current_user = current_user();
@@ -46,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $action = $_POST['action'] ?? '';
-        
+
         switch ($action) {
             case 'create':
                 $data = [
@@ -171,7 +175,7 @@ $managers = $departmentService->getManagersList();
                 </div>
 
                 <!-- Alerts -->
-                <?php if ($error): ?>
+                <?php if ($error) : ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="fas fa-exclamation-triangle"></i>
                     <?= htmlspecialchars($error) ?>
@@ -179,7 +183,7 @@ $managers = $departmentService->getManagersList();
                 </div>
                 <?php endif; ?>
 
-                <?php if ($success): ?>
+                <?php if ($success) : ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="fas fa-check-circle"></i>
                     <?= htmlspecialchars($success) ?>
@@ -196,13 +200,13 @@ $managers = $departmentService->getManagersList();
                         </h5>
                     </div>
                     <div class="card-body">
-                        <?php if (empty($departments)): ?>
+                        <?php if (empty($departments)) : ?>
                         <div class="text-center py-5">
                             <i class="fas fa-building fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">لا توجد إدارات مسجلة</h5>
                             <p class="text-muted">ابدأ بإضافة إدارة جديدة</p>
                         </div>
-                        <?php else: ?>
+                        <?php else : ?>
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
@@ -216,7 +220,7 @@ $managers = $departmentService->getManagersList();
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($departments as $dept): ?>
+                                    <?php foreach ($departments as $dept) : ?>
                                     <tr>
                                         <td>
                                             <strong><?= htmlspecialchars($dept['name']) ?></strong>
@@ -225,24 +229,24 @@ $managers = $departmentService->getManagersList();
                                             <?= $dept['description'] ? htmlspecialchars($dept['description']) : '<span class="text-muted">غير محدد</span>' ?>
                                         </td>
                                         <td>
-                                            <?php if ($dept['manager_name']): ?>
+                                            <?php if ($dept['manager_name']) : ?>
                                                 <div>
                                                     <i class="fas fa-user-tie text-primary"></i>
                                                     <strong><?= htmlspecialchars($dept['manager_name']) ?></strong>
                                                     <br>
                                                     <small class="text-muted"><?= htmlspecialchars($dept['manager_email']) ?></small>
                                                 </div>
-                                            <?php else: ?>
+                                            <?php else : ?>
                                                 <span class="text-muted">غير محدد</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <?php if ($dept['is_active']): ?>
+                                            <?php if ($dept['is_active']) : ?>
                                                 <span class="badge bg-success">
                                                     <i class="fas fa-check"></i>
                                                     نشطة
                                                 </span>
-                                            <?php else: ?>
+                                            <?php else : ?>
                                                 <span class="badge bg-danger">
                                                     <i class="fas fa-times"></i>
                                                     غير نشطة
@@ -320,7 +324,7 @@ $managers = $departmentService->getManagersList();
                             <label for="manager_id" class="form-label">المدير</label>
                             <select class="form-select" id="manager_id" name="manager_id">
                                 <option value="">اختر المدير</option>
-                                <?php foreach ($managers as $manager): ?>
+                                <?php foreach ($managers as $manager) : ?>
                                 <option value="<?= $manager['id'] ?>"><?= htmlspecialchars($manager['name']) ?> (<?= htmlspecialchars($manager['email']) ?>)</option>
                                 <?php endforeach; ?>
                             </select>

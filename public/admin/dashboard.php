@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 // Include required files
-require_once SRC_PATH . '/helpers.php';
-require_once SRC_PATH . '/Core/Auth.php';
+require_once __DIR__ . '/../../src/helpers.php';
+require_once __DIR__ . '/../../src/Core/Auth.php';
 
 // Require authentication - redirect to login if not logged in
 require_auth();
@@ -16,9 +16,9 @@ if (!validate_session()) {
 }
 
 // تضمين الإعدادات
-require_once CONFIG_PATH . '/database.php';
-require_once SRC_PATH . '/Core/Services/DepartmentService.php';
-require_once SRC_PATH . '/Core/Services/FormService.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../src/Core/Services/DepartmentService.php';
+require_once __DIR__ . '/../../src/Core/Services/FormService.php';
 
 // Get current user
 $current_user = current_user();
