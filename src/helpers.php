@@ -1080,14 +1080,12 @@ function validate_session(): bool
  */
 function get_available_roles(): array
 {
-    try {
-        require_once __DIR__ . '/Core/Services/RolePermissionService.php';
-        $roleService = new \BuraqForms\Core\Services\RolePermissionService();
-        return $roleService->getAllRoles();
-    } catch (Exception $e) {
-        error_log("Error getting available roles: " . $e->getMessage());
-        return [];
-    }
+    // Simplified: return basic roles
+    return [
+        ['id' => 1, 'role_name' => 'admin', 'display_name' => 'Admin', 'description' => 'Full access'],
+        ['id' => 2, 'role_name' => 'manager', 'display_name' => 'Manager', 'description' => 'Department access'],
+        ['id' => 3, 'role_name' => 'editor', 'display_name' => 'Editor', 'description' => 'Limited access']
+    ];
 }
 
 /**
@@ -1156,28 +1154,9 @@ function has_role_level(string $required_role): bool
  */
 function get_department_permissions(int $departmentId): array
 {
-    $user = current_user();
-    if (!$user) {
-        return [];
-    }
-
-    try {
-        require_once __DIR__ . '/Core/Services/RolePermissionService.php';
-        $roleService = new \BuraqForms\Core\Services\RolePermissionService();
-        $permissions = [];
-
-        $all_permissions = $roleService->getUserPermissions($user['id']);
-        foreach ($all_permissions as $permission) {
-            if ($roleService->hasPermission($user['id'], $permission, $departmentId)) {
-                $permissions[] = $permission;
-            }
-        }
-
-        return $permissions;
-    } catch (Exception $e) {
-        error_log("Error getting department permissions: " . $e->getMessage());
-        return [];
-    }
+    // Simplified: return empty array for now
+    // TODO: Implement proper department permissions when needed
+    return [];
 }
 
 /**

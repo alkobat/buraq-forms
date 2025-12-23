@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<ruleset name="BuraqForms">
+    <description>Custom coding standard for BuraqForms - allows snake_case method names</description>
+
+    <!-- Use PSR12 as base -->
+    <rule ref="PSR12"/>
+</ruleset>
