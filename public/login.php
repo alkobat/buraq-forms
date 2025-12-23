@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-if (!defined('CONFIG_PATH')) {
-    require_once __DIR__ . '/../config/constants.php';
-}
-
 session_start();
 
 // Include required files

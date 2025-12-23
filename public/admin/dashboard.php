@@ -2,9 +2,6 @@
 
 declare(strict_types=1);
 
-// Include configuration
-require_once __DIR__ . '/../../config/constants.php';
-
 // Include required files
 require_once __DIR__ . '/../../src/helpers.php';
 require_once __DIR__ . '/../../src/Core/Auth.php';
