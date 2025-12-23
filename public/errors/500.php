@@ -1,7 +1,6 @@
 <?php
-if (!defined('CONFIG_PATH')) {
-    require_once __DIR__ . '/../../config/constants.php';
-}
+define('APP_URL', getenv('APP_URL') ?: 'http://localhost');
+
 // صفحة خطأ 500
 $pageTitle = 'خطأ في الخادم';
 ?>

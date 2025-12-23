@@ -2,11 +2,8 @@
 
 declare(strict_types=1);
 
-if (!defined('CONFIG_PATH')) {
-    require_once __DIR__ . '/../../config/constants.php';
-}
-
-require_once CONFIG_PATH . '/database.php';
+// تضمين الإعدادات
+require_once __DIR__ . '/../../config/database.php';
 require_once SRC_PATH . '/helpers.php';
 require_once SRC_PATH . '/Core/Services/FormService.php';
 require_once SRC_PATH . '/Core/Services/FormFieldService.php';
