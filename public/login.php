@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 if (!defined('CONFIG_PATH')) {
@@ -8,8 +9,8 @@ if (!defined('CONFIG_PATH')) {
 session_start();
 
 // Include required files
-require_once SRC_PATH . '/helpers.php';
-require_once SRC_PATH . '/Core/Auth.php';
+require_once __DIR__ . '/../src/helpers.php';
+require_once __DIR__ . '/../src/Core/Auth.php';
 
 use BuraqForms\Core\Auth;
 
@@ -33,27 +34,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $email = $_POST['email'] ?? '';
         $password = $_POST['password'] ?? '';
         $remember_me = isset($_POST['remember_me']);
-        
+
         // التحقق من وجود الإيميل وكلمة المرور
         if (!empty($email) && !empty($password)) {
             // Validate and sanitize input
             $email = filter_var(trim($email), FILTER_SANITIZE_EMAIL);
-            
+
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $error = 'تنسيق البريد الإلكتروني غير صحيح';
             } else {
                 // Use Auth class for login
                 $result = Auth::login_user($email, $password, $remember_me);
-                
+
                 if ($result['success']) {
                     // Get redirect URL if provided
                     $redirect = $_GET['redirect'] ?? '/buraq-forms/public/admin/dashboard.php';
-                    
+
                     // Validate redirect URL to prevent open redirect
                     if (!preg_match('/^[a-zA-Z0-9_\-\/\.?&=]*$/', $redirect)) {
                         $redirect = '/buraq-forms/public/admin/dashboard.php';
                     }
-                    
+
                     header('Location: ' . $redirect);
                     exit;
                 } else {
@@ -261,14 +262,14 @@ $csrf_token = generate_csrf_token();
             <p>أدخل بياناتك للوصول للنظام</p>
         </div>
 
-        <?php if (!empty($error)): ?>
+        <?php if (!empty($error)) : ?>
             <div class="alert alert-danger" role="alert">
                 <i class="fas fa-exclamation-triangle me-2"></i>
                 <?php echo htmlspecialchars($error); ?>
             </div>
         <?php endif; ?>
 
-        <?php if (!empty($success)): ?>
+        <?php if (!empty($success)) : ?>
             <div class="alert alert-success" role="alert">
                 <i class="fas fa-check-circle me-2"></i>
                 <?php echo htmlspecialchars($success); ?>

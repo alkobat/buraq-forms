@@ -2,9 +2,13 @@
 
 declare(strict_types=1);
 
+if (!defined('CONFIG_PATH')) {
+    require_once __DIR__ . '/../../config/constants.php';
+}
+
 // Include required files
-require_once SRC_PATH . '/helpers.php';
-require_once SRC_PATH . '/Core/Auth.php';
+require_once __DIR__ . '/../../src/helpers.php';
+require_once __DIR__ . '/../../src/Core/Auth.php';
 
 // Require authentication - redirect to login if not logged in
 require_auth();
@@ -16,10 +20,10 @@ if (!validate_session()) {
 }
 
 // تضمين الإعدادات
-require_once CONFIG_PATH . '/database.php';
-require_once SRC_PATH . '/Core/Services/FormService.php';
-require_once SRC_PATH . '/Core/Services/FormSubmissionService.php';
-require_once SRC_PATH . '/Core/Services/DepartmentService.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../src/Core/Services/FormService.php';
+require_once __DIR__ . '/../../src/Core/Services/FormSubmissionService.php';
+require_once __DIR__ . '/../../src/Core/Services/DepartmentService.php';
 
 // Get current user
 $current_user = current_user();
@@ -47,18 +51,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
             throw new Exception('رمز الأمان غير صحيح');
         }
-        
+
         $submissionId = (int)($_POST['submission_id'] ?? 0);
         if ($submissionId > 0) {
             // جلب الملفات المرتبطة بالإجابة
             $stmt = $pdo->prepare('SELECT file_path FROM submission_answers WHERE submission_id = :id AND file_path IS NOT NULL');
             $stmt->execute(['id' => $submissionId]);
             $files = $stmt->fetchAll(PDO::FETCH_COLUMN);
-            
+
             // حذف الإجابة من قاعدة البيانات
             $stmt = $pdo->prepare('DELETE FROM form_submissions WHERE id = :id');
             $stmt->execute(['id' => $submissionId]);
-            
+
             // حذف الملفات من النظام
             foreach ($files as $filePath) {
                 $fullPath = __DIR__ . '/../../' . $filePath;
@@ -66,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     unlink($fullPath);
                 }
             }
-            
+
             $success = 'تم حذف الإجابة بنجاح';
         }
     } catch (Exception $e) {
@@ -81,10 +85,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         if (!isset($_POST['csrf_token']) || $_POST['csrf_token'] !== ($_SESSION['csrf_token'] ?? '')) {
             throw new Exception('رمز الأمان غير صحيح');
         }
-        
+
         $submissionId = (int)($_POST['submission_id'] ?? 0);
         $status = $_POST['status'] ?? 'pending';
-        
+
         if ($submissionId > 0 && in_array($status, ['pending', 'completed', 'archived'])) {
             $stmt = $pdo->prepare('UPDATE form_submissions SET status = :status WHERE id = :id');
             $stmt->execute(['status' => $status, 'id' => $submissionId]);
@@ -315,7 +319,7 @@ $stats = $statsStmt->fetch();
                         إدارة الإجابات المرسلة
                     </h2>
                     <div>
-                        <a href="api/export-submissions.php?format=csv<?php 
+                        <a href="api/export-submissions.php?format=csv<?php
                             echo $filters['form_id'] ? '&form_id=' . $filters['form_id'] : '';
                             echo $filters['department_id'] ? '&department_id=' . $filters['department_id'] : '';
                             echo $filters['status'] ? '&status=' . $filters['status'] : '';
@@ -325,7 +329,7 @@ $stats = $statsStmt->fetch();
                         ?>" class="btn btn-success me-2">
                             <i class="fas fa-file-csv"></i> تصدير CSV
                         </a>
-                        <a href="api/export-submissions.php?format=excel<?php 
+                        <a href="api/export-submissions.php?format=excel<?php
                             echo $filters['form_id'] ? '&form_id=' . $filters['form_id'] : '';
                             echo $filters['department_id'] ? '&department_id=' . $filters['department_id'] : '';
                             echo $filters['status'] ? '&status=' . $filters['status'] : '';
@@ -338,7 +342,7 @@ $stats = $statsStmt->fetch();
                     </div>
                 </div>
 
-                <?php if ($error): ?>
+                <?php if ($error) : ?>
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         <i class="fas fa-exclamation-circle"></i>
                         <?= htmlspecialchars($error) ?>
@@ -346,7 +350,7 @@ $stats = $statsStmt->fetch();
                     </div>
                 <?php endif; ?>
 
-                <?php if ($success): ?>
+                <?php if ($success) : ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <i class="fas fa-check-circle"></i>
                         <?= htmlspecialchars($success) ?>
@@ -394,7 +398,7 @@ $stats = $statsStmt->fetch();
                                 <label class="form-label">الاستمارة</label>
                                 <select name="form_id" class="form-select">
                                     <option value="">جميع الاستمارات</option>
-                                    <?php foreach ($forms as $form): ?>
+                                    <?php foreach ($forms as $form) : ?>
                                         <option value="<?= $form['id'] ?>" <?= $filters['form_id'] == $form['id'] ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($form['title']) ?>
                                         </option>
@@ -405,7 +409,7 @@ $stats = $statsStmt->fetch();
                                 <label class="form-label">الإدارة</label>
                                 <select name="department_id" class="form-select">
                                     <option value="">جميع الإدارات</option>
-                                    <?php foreach ($departments as $dept): ?>
+                                    <?php foreach ($departments as $dept) : ?>
                                         <option value="<?= $dept['id'] ?>" <?= $filters['department_id'] == $dept['id'] ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($dept['name']) ?>
                                         </option>
@@ -456,12 +460,12 @@ $stats = $statsStmt->fetch();
                         </h5>
                     </div>
 
-                    <?php if (empty($submissions)): ?>
+                    <?php if (empty($submissions)) : ?>
                         <div class="alert alert-info text-center">
                             <i class="fas fa-info-circle"></i>
                             لا توجد إجابات مطابقة للفلاتر المحددة
                         </div>
-                    <?php else: ?>
+                    <?php else : ?>
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
@@ -477,7 +481,7 @@ $stats = $statsStmt->fetch();
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($submissions as $index => $submission): ?>
+                                    <?php foreach ($submissions as $index => $submission) : ?>
                                         <tr>
                                             <td><?= $offset + $index + 1 ?></td>
                                             <td>
@@ -488,19 +492,19 @@ $stats = $statsStmt->fetch();
                                             <td><?= htmlspecialchars($submission['department_name'] ?? '-') ?></td>
                                             <td>
                                                 <?php
-                                                $statusClass = match($submission['status']) {
+                                                $statusClass = match ($submission['status']) {
                                                     'pending' => 'badge-pending',
                                                     'completed' => 'badge-completed',
                                                     'archived' => 'badge-archived',
                                                     default => 'bg-secondary'
                                                 };
-                                                $statusText = match($submission['status']) {
+                                                $statusText = match ($submission['status']) {
                                                     'pending' => 'قيد الانتظار',
                                                     'completed' => 'مكتملة',
                                                     'archived' => 'مؤرشفة',
                                                     default => $submission['status']
                                                 };
-                                                ?>
+    ?>
                                                 <span class="badge <?= $statusClass ?>"><?= $statusText ?></span>
                                             </td>
                                             <td><?= date('Y-m-d H:i', strtotime($submission['submitted_at'])) ?></td>
@@ -532,10 +536,10 @@ $stats = $statsStmt->fetch();
                         </div>
 
                         <!-- Pagination -->
-                        <?php if ($totalPages > 1): ?>
+                        <?php if ($totalPages > 1) : ?>
                             <nav aria-label="Page navigation" class="mt-3">
                                 <ul class="pagination justify-content-center">
-                                    <?php if ($page > 1): ?>
+                                    <?php if ($page > 1) : ?>
                                         <li class="page-item">
                                             <a class="page-link" href="?page=<?= $page - 1 ?><?= http_build_query(array_filter($filters), '', '&') ? '&' . http_build_query(array_filter($filters)) : '' ?>">
                                                 السابق
@@ -543,7 +547,7 @@ $stats = $statsStmt->fetch();
                                         </li>
                                     <?php endif; ?>
 
-                                    <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++): ?>
+                                    <?php for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++) : ?>
                                         <li class="page-item <?= $i === $page ? 'active' : '' ?>">
                                             <a class="page-link" href="?page=<?= $i ?><?= http_build_query(array_filter($filters), '', '&') ? '&' . http_build_query(array_filter($filters)) : '' ?>">
                                                 <?= $i ?>
@@ -551,7 +555,7 @@ $stats = $statsStmt->fetch();
                                         </li>
                                     <?php endfor; ?>
 
-                                    <?php if ($page < $totalPages): ?>
+                                    <?php if ($page < $totalPages) : ?>
                                         <li class="page-item">
                                             <a class="page-link" href="?page=<?= $page + 1 ?><?= http_build_query(array_filter($filters), '', '&') ? '&' . http_build_query(array_filter($filters)) : '' ?>">
                                                 التالي

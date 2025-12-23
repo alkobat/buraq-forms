@@ -2,11 +2,15 @@
 
 declare(strict_types=1);
 
+if (!defined('CONFIG_PATH')) {
+    require_once __DIR__ . '/../../config/constants.php';
+}
+
 // تضمين الإعدادات
 require_once __DIR__ . '/../../config/database.php';
-require_once SRC_PATH . '/Core/Services/FormService.php';
-require_once SRC_PATH . '/Core/Services/FormFieldService.php';
-require_once SRC_PATH . '/Core/Services/FormSubmissionService.php';
+require_once __DIR__ . '/../../src/Core/Services/FormService.php';
+require_once __DIR__ . '/../../src/Core/Services/FormFieldService.php';
+require_once __DIR__ . '/../../src/Core/Services/FormSubmissionService.php';
 
 // بدء الجلسة
 session_start();
@@ -35,13 +39,13 @@ if ($submissionId <= 0) {
 try {
     // جلب بيانات الإجابة
     $submission = $submissionService->getSubmissionById($submissionId);
-    
+
     // جلب بيانات الاستمارة
     $form = $formService->getById((int)$submission['form_id']);
-    
+
     // جلب حقول الاستمارة
     $fields = $formFieldService->getFieldsForForm((int)$submission['form_id'], true);
-    
+
     // جلب بيانات الإدارة إذا وجدت
     $department = null;
     if ($submission['department_id']) {
@@ -49,17 +53,17 @@ try {
         $stmt->execute(['id' => $submission['department_id']]);
         $department = $stmt->fetch();
     }
-    
+
     // تنظيم الإجابات حسب field_id
     $answersMap = [];
     foreach ($submission['answers'] as $answer) {
         $fieldId = (int)$answer['field_id'];
         $repeatIndex = (int)$answer['repeat_index'];
-        
+
         if (!isset($answersMap[$fieldId])) {
             $answersMap[$fieldId] = [];
         }
-        
+
         if ($repeatIndex > 0) {
             if (!isset($answersMap[$fieldId][$repeatIndex])) {
                 $answersMap[$fieldId][$repeatIndex] = [];
@@ -69,7 +73,6 @@ try {
             $answersMap[$fieldId][] = $answer;
         }
     }
-    
 } catch (Exception $e) {
     $error = $e->getMessage();
 }
@@ -77,7 +80,8 @@ try {
 /**
  * دالة لعرض قيمة الإجابة بشكل مقروء
  */
-function formatAnswer($answer, $fieldType) {
+function formatAnswer($answer, $fieldType)
+{
     if ($answer['file_path']) {
         return [
             'type' => 'file',
@@ -86,13 +90,13 @@ function formatAnswer($answer, $fieldType) {
             'size' => $answer['file_size']
         ];
     }
-    
+
     $value = $answer['answer'];
-    
+
     if ($value === null || $value === '') {
         return '-';
     }
-    
+
     // محاولة فك JSON للحقول التي تحتوي على قيم متعددة
     if (in_array($fieldType, ['checkbox', 'select']) && str_starts_with($value, '[')) {
         $decoded = json_decode($value, true);
@@ -100,14 +104,15 @@ function formatAnswer($answer, $fieldType) {
             return implode(', ', $decoded);
         }
     }
-    
+
     return $value;
 }
 
 /**
  * دالة لعرض حجم الملف بشكل مقروء
  */
-function formatFileSize($bytes) {
+function formatFileSize($bytes)
+{
     $units = ['B', 'KB', 'MB', 'GB'];
     $bytes = max($bytes, 0);
     $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
@@ -248,7 +253,7 @@ function formatFileSize($bytes) {
 
             <!-- Main content -->
             <main class="col-md-9 ms-sm-auto col-lg-10 main-content">
-                <?php if (isset($error)): ?>
+                <?php if (isset($error)) : ?>
                     <div class="alert alert-danger">
                         <i class="fas fa-exclamation-circle"></i>
                         <?= htmlspecialchars($error) ?>
@@ -256,7 +261,7 @@ function formatFileSize($bytes) {
                     <a href="form-submissions.php" class="btn btn-secondary">
                         <i class="fas fa-arrow-right"></i> العودة للقائمة
                     </a>
-                <?php else: ?>
+                <?php else : ?>
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h2>
                             <i class="fas fa-file-alt"></i>
@@ -306,19 +311,19 @@ function formatFileSize($bytes) {
                                     <div class="info-label">الحالة</div>
                                     <div class="info-value">
                                         <?php
-                                        $statusClass = match($submission['status']) {
+                                        $statusClass = match ($submission['status']) {
                                             'pending' => 'badge-pending',
                                             'completed' => 'badge-completed',
                                             'archived' => 'badge-archived',
                                             default => 'bg-secondary'
                                         };
-                                        $statusText = match($submission['status']) {
+                                        $statusText = match ($submission['status']) {
                                             'pending' => 'قيد الانتظار',
                                             'completed' => 'مكتملة',
                                             'archived' => 'مؤرشفة',
                                             default => $submission['status']
                                         };
-                                        ?>
+    ?>
                                         <span class="badge <?= $statusClass ?>"><?= $statusText ?></span>
                                     </div>
                                 </div>
@@ -330,7 +335,7 @@ function formatFileSize($bytes) {
                                 </div>
                             </div>
                         </div>
-                        <?php if ($submission['ip_address']): ?>
+                        <?php if ($submission['ip_address']) : ?>
                             <div class="info-row mt-3">
                                 <div class="info-label">عنوان IP</div>
                                 <div class="info-value">
@@ -347,12 +352,12 @@ function formatFileSize($bytes) {
                             الإجابات التفصيلية
                         </h5>
 
-                        <?php foreach ($fields as $field): ?>
+                        <?php foreach ($fields as $field) : ?>
                             <?php
                             $fieldId = (int)$field['id'];
                             $fieldType = $field['field_type'];
                             $isRepeater = $fieldType === 'repeater';
-                            
+
                             // تخطي الحقول الفرعية (children of repeater)
                             if ($field['parent_field_id'] !== null) {
                                 continue;
@@ -362,18 +367,18 @@ function formatFileSize($bytes) {
                             <div class="field-group">
                                 <h6 class="mb-3">
                                     <?= htmlspecialchars($field['label']) ?>
-                                    <?php if ($field['is_required']): ?>
+                                    <?php if ($field['is_required']) : ?>
                                         <span class="text-danger">*</span>
                                     <?php endif; ?>
                                 </h6>
 
-                                <?php if ($isRepeater): ?>
+                                <?php if ($isRepeater) : ?>
                                     <?php
                                     // جلب الحقول الفرعية للـ repeater
-                                    $childFields = array_filter($fields, function($f) use ($fieldId) {
+                                    $childFields = array_filter($fields, function ($f) use ($fieldId) {
                                         return (int)$f['parent_field_id'] === $fieldId;
                                     });
-                                    
+
                                     // جمع جميع repeat_index الموجودة
                                     $repeatIndices = [];
                                     foreach ($childFields as $childField) {
@@ -389,16 +394,16 @@ function formatFileSize($bytes) {
                                     ksort($repeatIndices);
                                     ?>
 
-                                    <?php if (empty($repeatIndices)): ?>
+                                    <?php if (empty($repeatIndices)) : ?>
                                         <p class="text-muted">لا توجد إدخالات</p>
-                                    <?php else: ?>
-                                        <?php foreach (array_keys($repeatIndices) as $repeatIndex): ?>
+                                    <?php else : ?>
+                                        <?php foreach (array_keys($repeatIndices) as $repeatIndex) : ?>
                                             <div class="repeater-group">
                                                 <h6 class="text-primary mb-3">
                                                     <i class="fas fa-layer-group"></i>
                                                     المجموعة #<?= $repeatIndex ?>
                                                 </h6>
-                                                <?php foreach ($childFields as $childField): ?>
+                                                <?php foreach ($childFields as $childField) : ?>
                                                     <?php
                                                     $childFieldId = (int)$childField['id'];
                                                     $childAnswers = $answersMap[$childFieldId][$repeatIndex] ?? [];
@@ -406,14 +411,14 @@ function formatFileSize($bytes) {
                                                     <div class="mb-3">
                                                         <strong><?= htmlspecialchars($childField['label']) ?>:</strong>
                                                         <div class="mt-1">
-                                                            <?php if (empty($childAnswers)): ?>
+                                                            <?php if (empty($childAnswers)) : ?>
                                                                 <span class="text-muted">-</span>
-                                                            <?php else: ?>
-                                                                <?php foreach ($childAnswers as $childAnswer): ?>
+                                                            <?php else : ?>
+                                                                <?php foreach ($childAnswers as $childAnswer) : ?>
                                                                     <?php
                                                                     $formattedValue = formatAnswer($childAnswer, $childField['field_type']);
                                                                     ?>
-                                                                    <?php if (is_array($formattedValue) && $formattedValue['type'] === 'file'): ?>
+                                                                    <?php if (is_array($formattedValue) && $formattedValue['type'] === 'file') : ?>
                                                                         <div class="file-preview">
                                                                             <i class="fas fa-file"></i>
                                                                             <a href="download-form-file.php?id=<?= $childAnswer['id'] ?>" target="_blank">
@@ -423,7 +428,7 @@ function formatFileSize($bytes) {
                                                                                 (<?= formatFileSize($formattedValue['size']) ?>)
                                                                             </small>
                                                                         </div>
-                                                                    <?php else: ?>
+                                                                    <?php else : ?>
                                                                         <?= htmlspecialchars($formattedValue) ?>
                                                                     <?php endif; ?>
                                                                 <?php endforeach; ?>
@@ -435,18 +440,18 @@ function formatFileSize($bytes) {
                                         <?php endforeach; ?>
                                     <?php endif; ?>
 
-                                <?php else: ?>
+                                <?php else : ?>
                                     <?php
                                     $answers = $answersMap[$fieldId] ?? [];
                                     ?>
-                                    <?php if (empty($answers)): ?>
+                                    <?php if (empty($answers)) : ?>
                                         <p class="text-muted">لم يتم الإجابة</p>
-                                    <?php else: ?>
-                                        <?php foreach ($answers as $answer): ?>
+                                    <?php else : ?>
+                                        <?php foreach ($answers as $answer) : ?>
                                             <?php
                                             $formattedValue = formatAnswer($answer, $fieldType);
                                             ?>
-                                            <?php if (is_array($formattedValue) && $formattedValue['type'] === 'file'): ?>
+                                            <?php if (is_array($formattedValue) && $formattedValue['type'] === 'file') : ?>
                                                 <div class="file-preview">
                                                     <i class="fas fa-file"></i>
                                                     <a href="download-form-file.php?id=<?= $answer['id'] ?>" target="_blank">
@@ -456,7 +461,7 @@ function formatFileSize($bytes) {
                                                         (<?= formatFileSize($formattedValue['size']) ?>)
                                                     </small>
                                                 </div>
-                                            <?php else: ?>
+                                            <?php else : ?>
                                                 <div><?= nl2br(htmlspecialchars($formattedValue)) ?></div>
                                             <?php endif; ?>
                                         <?php endforeach; ?>

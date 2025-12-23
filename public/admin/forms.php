@@ -2,9 +2,13 @@
 
 declare(strict_types=1);
 
+if (!defined('CONFIG_PATH')) {
+    require_once __DIR__ . '/../../config/constants.php';
+}
+
 // Include required files
-require_once SRC_PATH . '/helpers.php';
-require_once SRC_PATH . '/Core/Auth.php';
+require_once __DIR__ . '/../../src/helpers.php';
+require_once __DIR__ . '/../../src/Core/Auth.php';
 
 // Require authentication - redirect to login if not logged in
 require_auth();
@@ -16,8 +20,8 @@ if (!validate_session()) {
 }
 
 // تضمين الإعدادات
-require_once CONFIG_PATH . '/database.php';
-require_once SRC_PATH . '/Core/Services/FormService.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../src/Core/Services/FormService.php';
 
 // Get current user
 $current_user = current_user();
@@ -46,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $action = $_POST['action'] ?? '';
-        
+
         switch ($action) {
             case 'create':
                 $data = [
@@ -185,7 +189,7 @@ try {
                 </div>
 
                 <!-- Alerts -->
-                <?php if ($error): ?>
+                <?php if ($error) : ?>
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="fas fa-exclamation-triangle"></i>
                     <?= htmlspecialchars($error) ?>
@@ -193,7 +197,7 @@ try {
                 </div>
                 <?php endif; ?>
 
-                <?php if ($success): ?>
+                <?php if ($success) : ?>
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     <i class="fas fa-check-circle"></i>
                     <?= htmlspecialchars($success) ?>
@@ -210,13 +214,13 @@ try {
                         </h5>
                     </div>
                     <div class="card-body">
-                        <?php if (empty($forms)): ?>
+                        <?php if (empty($forms)) : ?>
                         <div class="text-center py-5">
                             <i class="fas fa-file-alt fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">لا توجد استمارات</h5>
                             <p class="text-muted">ابدأ بإنشاء استمارة جديدة</p>
                         </div>
-                        <?php else: ?>
+                        <?php else : ?>
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
@@ -230,7 +234,7 @@ try {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($forms as $form): ?>
+                                    <?php foreach ($forms as $form) : ?>
                                     <tr>
                                         <td>
                                             <div>
@@ -243,12 +247,12 @@ try {
                                             <?= $form['description'] ? htmlspecialchars(mb_substr($form['description'], 0, 50)) . (mb_strlen($form['description']) > 50 ? '...' : '') : '<span class="text-muted">لا يوجد وصف</span>' ?>
                                         </td>
                                         <td>
-                                            <?php if ($form['status'] === 'active'): ?>
+                                            <?php if ($form['status'] === 'active') : ?>
                                                 <span class="badge bg-success">
                                                     <i class="fas fa-check"></i>
                                                     نشطة
                                                 </span>
-                                            <?php else: ?>
+                                            <?php else : ?>
                                                 <span class="badge bg-danger">
                                                     <i class="fas fa-times"></i>
                                                     غير نشطة
