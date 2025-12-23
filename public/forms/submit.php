@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-if (!defined('CONFIG_PATH')) {
-    require_once __DIR__ . '/../../config/constants.php';
-}
-
 require_once CONFIG_PATH . '/database.php';
 require_once SRC_PATH . '/helpers.php';
 require_once SRC_PATH . '/Core/Services/FormService.php';
@@ -18,7 +14,8 @@ session_start();
 
 header('Content-Type: application/json; charset=utf-8');
 
-function sendJsonResponse(bool $success, string $message, array $data = []): void {
+function sendJsonResponse(bool $success, string $message, array $data = []): void
+{
     echo json_encode([
         'success' => $success,
         'message' => $message,
@@ -55,20 +52,20 @@ $departmentId = isset($_POST['department_id']) && !empty($_POST['department_id']
 try {
     $submissionService = new BuraqForms\Core\Services\FormSubmissionService($pdo);
     $formService = new BuraqForms\Core\Services\FormService($pdo);
-    
+
     $form = $formService->getById($formId);
-    
+
     if ($form['status'] !== 'active') {
         sendJsonResponse(false, 'هذه الاستمارة غير نشطة حالياً');
     }
-    
+
     $answers = [];
     foreach ($_POST as $key => $value) {
         if (!in_array($key, ['csrf_token', 'form_id', 'submitted_by', 'department_id'])) {
             $answers[$key] = $value;
         }
     }
-    
+
     $files = [];
     foreach ($_FILES as $key => $file) {
         if ($file['error'] === UPLOAD_ERR_OK) {
@@ -77,25 +74,24 @@ try {
             sendJsonResponse(false, 'حدث خطأ في رفع الملف: ' . $file['name']);
         }
     }
-    
+
     $ipAddress = $_SERVER['REMOTE_ADDR'] ?? null;
-    
+
     $submissionData = [
         'submitted_by' => $submittedBy,
         'department_id' => $departmentId,
         'ip_address' => $ipAddress,
         'status' => 'pending'
     ];
-    
+
     $submission = $submissionService->submit($formId, $submissionData, $answers, $files);
-    
+
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    
+
     sendJsonResponse(true, 'تم إرسال الاستمارة بنجاح', [
         'reference_code' => $submission['reference_code'],
         'submission_id' => $submission['id']
     ]);
-    
 } catch (BuraqForms\Core\Exceptions\ValidationException $e) {
     $errors = $e->getErrors();
     $errorMessages = [];
@@ -103,10 +99,8 @@ try {
         $errorMessages[] = implode(', ', $fieldErrors);
     }
     sendJsonResponse(false, 'فشل التحقق من البيانات: ' . implode('; ', $errorMessages));
-    
 } catch (BuraqForms\Core\Exceptions\ServiceException $e) {
     sendJsonResponse(false, $e->getMessage());
-    
 } catch (Exception $e) {
     error_log('Submission error: ' . $e->getMessage());
     sendJsonResponse(false, 'حدث خطأ أثناء معالجة الطلب. يرجى المحاولة مرة أخرى.');

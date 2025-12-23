@@ -2,8 +2,22 @@
 
 declare(strict_types=1);
 
-use PDO;
-use PDOException;
+// تعريف الثوابت الأساسية إذا لم تكن معرفة
+if (!defined('BASE_PATH')) {
+    define('BASE_PATH', dirname(__DIR__));
+}
+if (!defined('SRC_PATH')) {
+    define('SRC_PATH', BASE_PATH . '/src');
+}
+if (!defined('CONFIG_PATH')) {
+    define('CONFIG_PATH', BASE_PATH . '/config');
+}
+if (!defined('PUBLIC_PATH')) {
+    define('PUBLIC_PATH', BASE_PATH . '/public');
+}
+if (!defined('STORAGE_PATH')) {
+    define('STORAGE_PATH', BASE_PATH . '/storage');
+}
 
 /**
  * Database Configuration and PDO Connection (PDO + utf8mb4)
@@ -14,8 +28,6 @@ use PDOException;
  * - testDatabaseConnection(): bool
  * - getDatabaseConfig(): array
  */
-
-require_once __DIR__ . '/constants.php';
 
 // ---------------------------------------------------------------------
 // .env loader (minimal, no dependencies)

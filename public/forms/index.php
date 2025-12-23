@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-if (!defined('CONFIG_PATH')) {
-    require_once __DIR__ . '/../../config/constants.php';
-}
-
 require_once CONFIG_PATH . '/database.php';
 require_once SRC_PATH . '/Core/Services/FormService.php';
 require_once SRC_PATH . '/Core/Services/DepartmentService.php';
@@ -21,11 +17,11 @@ $searchQuery = isset($_GET['search']) ? trim($_GET['search']) : '';
 try {
     $allForms = $formService->list('active');
     $departments = $departmentService->list(true);
-    
-    $filteredForms = array_filter($allForms, function($form) use ($selectedDepartment, $searchQuery) {
+
+    $filteredForms = array_filter($allForms, function ($form) use ($selectedDepartment, $searchQuery) {
         $matchesDepartment = true;
         $matchesSearch = true;
-        
+
         if ($selectedDepartment > 0) {
             $matchesDepartment = false;
             foreach ($form['departments'] as $dept) {
@@ -38,17 +34,16 @@ try {
                 $matchesDepartment = true;
             }
         }
-        
+
         if ($searchQuery !== '') {
             $title = mb_strtolower((string)$form['title']);
             $description = mb_strtolower((string)($form['description'] ?? ''));
             $search = mb_strtolower($searchQuery);
             $matchesSearch = (mb_strpos($title, $search) !== false || mb_strpos($description, $search) !== false);
         }
-        
+
         return $matchesDepartment && $matchesSearch;
     });
-    
 } catch (Exception $e) {
     $error = $e->getMessage();
     $filteredForms = [];
@@ -88,7 +83,7 @@ try {
     </header>
 
     <div class="container mt-4">
-        <?php if (isset($error)): ?>
+        <?php if (isset($error)) : ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="fas fa-exclamation-circle"></i>
                 <strong>خطأ:</strong> <?= htmlspecialchars($error) ?>
@@ -118,7 +113,7 @@ try {
                         </label>
                         <select name="department" class="form-select">
                             <option value="0">جميع الإدارات</option>
-                            <?php foreach ($departments as $dept): ?>
+                            <?php foreach ($departments as $dept) : ?>
                                 <option value="<?= (int)$dept['id'] ?>" 
                                         <?= $selectedDepartment === (int)$dept['id'] ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($dept['name']) ?>
@@ -138,7 +133,7 @@ try {
 
         <!-- Forms List -->
         <div class="row mt-4">
-            <?php if (empty($filteredForms)): ?>
+            <?php if (empty($filteredForms)) : ?>
                 <div class="col-12">
                     <div class="alert alert-info text-center">
                         <i class="fas fa-info-circle fa-3x mb-3"></i>
@@ -146,8 +141,8 @@ try {
                         <p>لم يتم العثور على استمارات نشطة في الوقت الحالي.</p>
                     </div>
                 </div>
-            <?php else: ?>
-                <?php foreach ($filteredForms as $form): ?>
+            <?php else : ?>
+                <?php foreach ($filteredForms as $form) : ?>
                     <div class="col-md-6 col-lg-4">
                         <div class="form-card fade-in">
                             <div class="card-header">
@@ -157,7 +152,7 @@ try {
                                 </h5>
                             </div>
                             <div class="card-body">
-                                <?php if (!empty($form['description'])): ?>
+                                <?php if (!empty($form['description'])) : ?>
                                     <p class="text-muted mb-3">
                                         <?= nl2br(htmlspecialchars($form['description'])) ?>
                                     </p>
@@ -170,14 +165,14 @@ try {
                                     </small>
                                 </div>
 
-                                <?php if (!empty($form['departments'])): ?>
+                                <?php if (!empty($form['departments'])) : ?>
                                     <div class="mb-3">
                                         <small class="text-muted d-block mb-2">
                                             <i class="fas fa-building"></i>
                                             الإدارات:
                                         </small>
                                         <div class="d-flex flex-wrap gap-2">
-                                            <?php foreach ($form['departments'] as $dept): ?>
+                                            <?php foreach ($form['departments'] as $dept) : ?>
                                                 <span class="badge bg-secondary">
                                                     <?= htmlspecialchars($dept['name']) ?>
                                                 </span>
@@ -205,7 +200,7 @@ try {
         </div>
 
         <!-- Statistics -->
-        <?php if (!empty($filteredForms)): ?>
+        <?php if (!empty($filteredForms)) : ?>
             <div class="row mt-4">
                 <div class="col-12">
                     <div class="alert alert-light text-center">

@@ -1,10 +1,8 @@
 <?php
+
 declare(strict_types=1);
 
-if (!defined('CONFIG_PATH')) {
-    // Fallback if not loaded via index.php
-    require_once __DIR__ . '/../config/constants.php';
-}
+namespace BuraqForms;
 
 class Router
 {
@@ -19,11 +17,11 @@ class Router
     {
         // تنظيف المسار
         $path = parse_url($uri, PHP_URL_PATH);
-        
+
         // معالجة المسار إذا كان السكربت في مجلد فرعي
         $scriptName = $_SERVER['SCRIPT_NAME']; // e.g. /buraq-forms/public/index.php
         $scriptDir = dirname($scriptName); // e.g. /buraq-forms/public
-        
+
         // إذا كان المسار يبدأ بمسار المجلد الفرعي، نحذفه لنحصل على المسار النسبي
         if ($scriptDir !== '/' && strpos($path, $scriptDir) === 0) {
             $path = substr($path, strlen($scriptDir));
@@ -33,11 +31,11 @@ class Router
         }
 
         $path = '/' . trim($path, '/');
-        
+
         if ($path === '/') {
             // Check specific logic for root
         }
-        
+
         // Remove .php extension if present for matching
         $cleanPath = $path;
         if (str_ends_with($path, '.php')) {
@@ -70,7 +68,7 @@ class Router
     {
         // الملفات محددة نسبة إلى public folder في الـ routes configuration عادةً
         // ولكن حسب config/routes.php نحن حددنا المسار النسبي مثل admin/dashboard.php
-        
+
         $filePath = PUBLIC_PATH . '/' . $file;
 
         if (file_exists($filePath)) {
@@ -85,9 +83,9 @@ class Router
     public function handleError(int $code, string $message = ''): void
     {
         http_response_code($code);
-        
+
         $errorFile = PUBLIC_PATH . "/errors/{$code}.php";
-        
+
         if (file_exists($errorFile)) {
             require $errorFile;
         } else {

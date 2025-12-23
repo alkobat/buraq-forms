@@ -2,10 +2,6 @@
 
 declare(strict_types=1);
 
-if (!defined('CONFIG_PATH')) {
-    require_once __DIR__ . '/../config/constants.php';
-}
-
 // تضمين الإعدادات
 require_once CONFIG_PATH . '/database.php';
 require_once SRC_PATH . '/Core/Services/FormService.php';
@@ -30,12 +26,12 @@ if (empty($slug)) {
 
 try {
     $form = $formService->getBySlug($slug);
-    
+
     // التحقق من أن الاستمارة نشطة
     if ($form['status'] !== 'active') {
         die('الاستمارة غير متاحة حالياً');
     }
-    
+
     // جلب الحقول
     $fieldDefinitions = $formFieldService->getFieldDefinitionsForRendering($form['id']);
 } catch (Exception $e) {
@@ -53,13 +49,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_form'])) {
         // التحقق من الاستمارة
         $answers = $_POST['answers'] ?? [];
         $validation = ees_validate_submission_data($answers, $fieldDefinitions);
-        
+
         if (!$validation['valid']) {
             $error = 'يرجى تصحيح الأخطاء أدناه';
         } else {
             // حفظ الإجابة (مؤقتاً - يمكن تطوير FormSubmissionService لاحقاً)
             $success = 'تم إرسال الاستمارة بنجاح! شكراً لك.';
-            
+
             // إعادة تعيين النموذج
             $_POST = [];
         }
@@ -222,7 +218,7 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                     <i class="fas fa-file-alt"></i>
                     <?= htmlspecialchars($form['title']) ?>
                 </h1>
-                <?php if ($form['description']): ?>
+                <?php if ($form['description']) : ?>
                 <p class="mb-0 opacity-75"><?= htmlspecialchars($form['description']) ?></p>
                 <?php endif; ?>
             </div>
@@ -230,14 +226,14 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
             <!-- Form Body -->
             <div class="form-body">
                 <!-- Alerts -->
-                <?php if ($error): ?>
+                <?php if ($error) : ?>
                 <div class="alert alert-danger" role="alert">
                     <i class="fas fa-exclamation-triangle"></i>
                     <?= htmlspecialchars($error) ?>
                 </div>
                 <?php endif; ?>
 
-                <?php if ($success): ?>
+                <?php if ($success) : ?>
                 <div class="alert alert-success" role="alert">
                     <i class="fas fa-check-circle"></i>
                     <?= htmlspecialchars($success) ?>
@@ -245,12 +241,12 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                 <?php endif; ?>
 
                 <!-- Form -->
-                <?php if (!$success): ?>
+                <?php if (!$success) : ?>
                 <form method="POST" id="previewForm">
                     <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
                     <input type="hidden" name="submit_form" value="1">
                     
-                    <?php foreach ($fieldDefinitions as $field): ?>
+                    <?php foreach ($fieldDefinitions as $field) : ?>
                     <div class="field-group">
                         <?php
                         $fieldName = 'answers[' . $field['field_key'] . ']';
@@ -261,19 +257,19 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                         
                         <label class="field-label" for="<?= $fieldId ?>">
                             <?= htmlspecialchars($field['label']) ?>
-                            <?php if ($field['is_required']): ?>
+                            <?php if ($field['is_required']) : ?>
                             <span class="field-required">*</span>
                             <?php endif; ?>
                         </label>
                         
-                        <?php if ($field['helper_text']): ?>
+                        <?php if ($field['helper_text']) : ?>
                         <div class="helper-text">
                             <i class="fas fa-info-circle"></i>
                             <?= htmlspecialchars($field['helper_text']) ?>
                         </div>
                         <?php endif; ?>
                         
-                        <?php if ($field['field_type'] === 'text'): ?>
+                        <?php if ($field['field_type'] === 'text') : ?>
                             <input type="text" 
                                    class="form-control <?= $errorClass ?>" 
                                    id="<?= $fieldId ?>" 
@@ -281,14 +277,14 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                                    placeholder="<?= htmlspecialchars($field['placeholder'] ?? '') ?>"
                                    value="<?= htmlspecialchars($_POST['answers'][$field['field_key']] ?? '') ?>">
                         
-                        <?php elseif ($field['field_type'] === 'textarea'): ?>
+                        <?php elseif ($field['field_type'] === 'textarea') : ?>
                             <textarea class="form-control <?= $errorClass ?>" 
                                       id="<?= $fieldId ?>" 
                                       name="<?= $fieldName ?>"
                                       placeholder="<?= htmlspecialchars($field['placeholder'] ?? '') ?>"
                                       rows="4"><?= htmlspecialchars($_POST['answers'][$field['field_key']] ?? '') ?></textarea>
                         
-                        <?php elseif ($field['field_type'] === 'email'): ?>
+                        <?php elseif ($field['field_type'] === 'email') : ?>
                             <input type="email" 
                                    class="form-control <?= $errorClass ?>" 
                                    id="<?= $fieldId ?>" 
@@ -296,36 +292,40 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                                    placeholder="<?= htmlspecialchars($field['placeholder'] ?? '') ?>"
                                    value="<?= htmlspecialchars($_POST['answers'][$field['field_key']] ?? '') ?>">
                         
-                        <?php elseif ($field['field_type'] === 'number'): ?>
+                        <?php elseif ($field['field_type'] === 'number') : ?>
                             <input type="number" 
                                    class="form-control <?= $errorClass ?>" 
                                    id="<?= $fieldId ?>" 
                                    name="<?= $fieldName ?>"
                                    placeholder="<?= htmlspecialchars($field['placeholder'] ?? '') ?>"
                                    value="<?= htmlspecialchars($_POST['answers'][$field['field_key']] ?? '') ?>"
-                                   <?php if (isset($field['validation_rules']['min'])): ?>min="<?= $field['validation_rules']['min'] ?>"<?php endif; ?>
-                                   <?php if (isset($field['validation_rules']['max'])): ?>max="<?= $field['validation_rules']['max'] ?>"<?php endif; ?>>
+                                   <?php if (isset($field['validation_rules']['min'])) :
+                                        ?>min="<?= $field['validation_rules']['min'] ?>"<?php
+                                   endif; ?>
+                                   <?php if (isset($field['validation_rules']['max'])) :
+                                        ?>max="<?= $field['validation_rules']['max'] ?>"<?php
+                                   endif; ?>>
                         
-                        <?php elseif ($field['field_type'] === 'date'): ?>
+                        <?php elseif ($field['field_type'] === 'date') : ?>
                             <input type="date" 
                                    class="form-control <?= $errorClass ?>" 
                                    id="<?= $fieldId ?>" 
                                    name="<?= $fieldName ?>"
                                    value="<?= htmlspecialchars($_POST['answers'][$field['field_key']] ?? '') ?>">
                         
-                        <?php elseif ($field['field_type'] === 'time'): ?>
+                        <?php elseif ($field['field_type'] === 'time') : ?>
                             <input type="time" 
                                    class="form-control <?= $errorClass ?>" 
                                    id="<?= $fieldId ?>" 
                                    name="<?= $fieldName ?>"
                                    value="<?= htmlspecialchars($_POST['answers'][$field['field_key']] ?? '') ?>">
                         
-                        <?php elseif ($field['field_type'] === 'select'): ?>
+                        <?php elseif ($field['field_type'] === 'select') : ?>
                             <select class="form-select <?= $errorClass ?>" 
                                     id="<?= $fieldId ?>" 
                                     name="<?= $fieldName ?>">
                                 <option value="">اختر...</option>
-                                <?php foreach ($field['options'] ?? [] as $option): ?>
+                                <?php foreach ($field['options'] ?? [] as $option) : ?>
                                 <option value="<?= htmlspecialchars($option['value']) ?>" 
                                         <?= (($_POST['answers'][$field['field_key']] ?? '') === $option['value']) ? 'selected' : '' ?>>
                                     <?= htmlspecialchars($option['label']) ?>
@@ -333,9 +333,9 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                                 <?php endforeach; ?>
                             </select>
                         
-                        <?php elseif ($field['field_type'] === 'radio'): ?>
+                        <?php elseif ($field['field_type'] === 'radio') : ?>
                             <div class="radio-group">
-                                <?php foreach ($field['options'] ?? [] as $option): ?>
+                                <?php foreach ($field['options'] ?? [] as $option) : ?>
                                 <label class="option-item">
                                     <input type="radio" 
                                            class="form-check-input <?= $errorClass ?>" 
@@ -347,14 +347,14 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                                 <?php endforeach; ?>
                             </div>
                         
-                        <?php elseif ($field['field_type'] === 'checkbox'): ?>
+                        <?php elseif ($field['field_type'] === 'checkbox') : ?>
                             <div class="checkbox-group">
-                                <?php 
-                                $selectedValues = is_array($_POST['answers'][$field['field_key']] ?? null) 
-                                    ? $_POST['answers'][$field['field_key']] 
+                                <?php
+                                $selectedValues = is_array($_POST['answers'][$field['field_key']] ?? null)
+                                    ? $_POST['answers'][$field['field_key']]
                                     : [];
-                                foreach ($field['options'] ?? [] as $option): 
-                                ?>
+                                foreach ($field['options'] ?? [] as $option) :
+                                    ?>
                                 <label class="option-item">
                                     <input type="checkbox" 
                                            class="form-check-input <?= $errorClass ?>" 
@@ -366,7 +366,7 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                                 <?php endforeach; ?>
                             </div>
                         
-                        <?php elseif ($field['field_type'] === 'file'): ?>
+                        <?php elseif ($field['field_type'] === 'file') : ?>
                             <input type="file" 
                                    class="form-control <?= $errorClass ?>" 
                                    id="<?= $fieldId ?>" 
@@ -378,7 +378,7 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                         
                         <?php endif; ?>
                         
-                        <?php if ($hasError): ?>
+                        <?php if ($hasError) : ?>
                         <div class="error-message">
                             <i class="fas fa-exclamation-circle"></i>
                             <?= implode('، ', $validation['errors'][$field['field_key']]) ?>
@@ -394,7 +394,7 @@ $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
                         </button>
                     </div>
                 </form>
-                <?php else: ?>
+                <?php else : ?>
                 <div class="text-center">
                     <div class="mb-4">
                         <i class="fas fa-check-circle text-success" style="font-size: 4rem;"></i>
