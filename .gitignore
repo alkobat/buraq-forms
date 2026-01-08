@@ -72,6 +72,10 @@ Thumbs.db
 /tests/_logs/
 /tests/coverage/
 
+# Test suite files (keep test files)
+/tests/results/
+/tests/logs/
+
 # Documentation build files
 /docs/_build/
 /docs/.doctrees/
